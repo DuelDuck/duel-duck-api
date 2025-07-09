@@ -5,6 +5,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
+const DuckPointMockMint = "DPOINT"
+
 type WalletToken struct {
 	bun.BaseModel `bun:"table:wallet_tokens,alias:wt" json:"-"`
 
@@ -38,4 +40,14 @@ type WalletTokenEditReq struct {
 
 type WalletTokenDeleteReq struct {
 	Mint string `jons:"mint"`
+}
+
+type SwappableTokens struct {
+	Mints          []string
+	IsSolSwappable bool
+}
+
+type AutoswapToken struct {
+	Mint         string
+	AmountToSwap uint64
 }

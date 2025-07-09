@@ -32,7 +32,10 @@ var (
 	//USDCMintAddress = solana.MustPublicKeyFromBase58("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr")
 )
 
-const USDCMintDecimals uint8 = 6
+const (
+	USDCMintDecimals uint8 = 6
+	SolMintDecimals  uint8 = 9
+)
 
 type proceedTransferData struct {
 	SenderAccount         solana.PrivateKey
@@ -143,39 +146,63 @@ const (
 	Processed  = rpc.CommitmentProcessed
 )
 
+func (s *WalletService) GetTokenBalance(
+	ctx context.Context,
+	ata solana.PublicKey,
+) (uint64, error) {
+	balance, err := s.SolanaRPC.GetTokenAccountBalance(ctx, ata, Commitment)
+	if err != nil || balance == nil || balance.Value == nil {
+		return 0, apperrors.ServiceUnavailable("failed to get ata balance", err)
+	}
+
+	balanceAmount, err := strconv.ParseUint(balance.Value.Amount, 10, 64)
+	if err != nil {
+		return 0, apperrors.ServiceUnavailable("failed to parse token balance amount", err)
+	}
+
+	return balanceAmount, nil
+}
+
 func (s *WalletService) HasEnoughTokenBalance(
 	ctx context.Context,
 	ata solana.PublicKey,
 	requiredAmount uint64,
 ) error {
-	balance, err := s.SolanaRPC.GetTokenAccountBalance(ctx, ata, Commitment)
-	if err != nil || balance == nil || balance.Value == nil {
-		return apperrors.ServiceUnavailable("failed to get ata balance", err)
-	}
-
-	balanceAmount, err := strconv.ParseUint(balance.Value.Amount, 10, 64)
+	tokenBalance, err := s.GetTokenBalance(ctx, ata)
 	if err != nil {
-		return apperrors.ServiceUnavailable("failed to parse token balance amount", err)
+		return err
 	}
 
-	if balanceAmount < requiredAmount {
+	if tokenBalance < requiredAmount {
 		return apperrors.BadRequest("not enough balance to proceed a transaction", err)
 	}
 
 	return nil
 }
 
-func (s *WalletService) HasEnoughSolBalance(
+func (s *WalletService) GetSolBalance(
 	ctx context.Context,
-	sender solana.PublicKey,
-	requiredAmount uint64,
-) error {
-	balance, err := s.SolanaRPC.GetBalance(ctx, sender, Commitment)
+	pk solana.PublicKey,
+) (uint64, error) {
+	balance, err := s.SolanaRPC.GetBalance(ctx, pk, Commitment)
 	if err != nil || balance == nil {
-		return apperrors.ServiceUnavailable("failed to get ata balance", err)
+		return 0, apperrors.ServiceUnavailable("failed to get ata balance", err)
 	}
 
-	if balance.Value < requiredAmount {
+	return balance.Value, nil
+}
+
+func (s *WalletService) HasEnoughSolBalance(
+	ctx context.Context,
+	pk solana.PublicKey,
+	requiredAmount uint64,
+) error {
+	balance, err := s.GetSolBalance(ctx, pk)
+	if err != nil {
+		return err
+	}
+
+	if balance < requiredAmount {
 		return apperrors.BadRequest("not enough balance to proceed a transaction", err)
 	}
 
@@ -562,7 +589,8 @@ func (s *WalletService) Swap(
 			inputMintAddress,
 			outputMintAddress,
 			rawAmount,
-			platformFeeBPS)
+			platformFeeBPS,
+		)
 		if err != nil {
 			zap.L().Error(
 				"failed to swap tokens",

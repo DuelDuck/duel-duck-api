@@ -13,6 +13,7 @@ require (
 	github.com/gofiber/fiber/v3 v3.0.0-beta.4
 	github.com/gofiber/utils/v2 v2.0.0-beta.7
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/vault/api v1.15.0
 	github.com/hashicorp/vault/api/auth/approle v0.8.0
@@ -32,12 +33,6 @@ require (
 	go.uber.org/zap v1.26.0
 	google.golang.org/api v0.183.0
 	gopkg.in/telebot.v3 v3.3.8
-)
-
-require (
-	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.29.0 // indirect
-	golang.org/x/mod v0.21.0 // indirect
 )
 
 require (
@@ -73,7 +68,6 @@ require (
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gofiber/schema v1.2.0 // indirect
-	github.com/golang-migrate/migrate/v4 v4.18.3 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect

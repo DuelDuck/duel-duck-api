@@ -2,6 +2,10 @@ package cron
 
 import (
 	"context"
+	"strconv"
+	"time"
+
+	"github.com/gagliardetto/solana-go"
 	"github.com/google/uuid"
 	rcron "github.com/robfig/cron/v3"
 	"gitlab.com/duel-duck/duel-duck-api/config"
@@ -10,8 +14,6 @@ import (
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/mtype"
 	"go.uber.org/zap"
-	"strconv"
-	"time"
 )
 
 type DuelCron struct {
@@ -88,7 +90,22 @@ func NewDuelCron(
 		return nil, err
 	}
 
+	// this function is being called only for testing on local environment
+	duelCron.TestAutoswap()
+
 	return duelCron, nil
+}
+
+func (c *DuelCron) TestAutoswap() {
+	err := c.DuelService.WalletService.AutoswapUSDC(
+		context.Background(),
+		uuid.MustParse("cc1d2240-c807-47ac-a748-ce6ff97b2c6e"),
+		solana.MustPublicKeyFromBase58("JAy4tczzz4VLNtQCTjcxVrkRRyxg9gmrMebeQL2tJ8Up"),
+		1_000_000,
+	)
+	if err != nil {
+		zap.L().Error("failed to autoswap", zap.Error(err))
+	}
 }
 
 func (c *DuelCron) updateLeaderboard() {

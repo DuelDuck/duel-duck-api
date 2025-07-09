@@ -93,3 +93,23 @@ func (r *WalletTokenRepository) Delete(
 
 	return err
 }
+
+func (r *WalletTokenRepository) MintsWithAutoswap(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]string, error) {
+	tokens := make([]string, 0)
+
+	err := r.DB.NewSelect().
+		Model((*model.WalletToken)(nil)).
+		Column("mint").
+		Where("user_id = ?", userID).
+		Where("is_swappable = true").
+		Where("mint != ?", model.DuckPointMockMint).
+		Scan(ctx, &tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}

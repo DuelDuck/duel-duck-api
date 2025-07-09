@@ -25,23 +25,24 @@ import (
 )
 
 type WalletService struct {
-	TaskService               *TaskService
-	PriorityTracker           *PriorityTracker
-	SigTracker                *sigtracker.TxTracker
-	UserRepository            *repository.UserRepository
-	WalletTokenRepository     *repository.WalletTokenRepository
-	WalletCacheStorage        *cache.WalletCacheStorage
-	privateKeyRepository      *cypher.PrivateKeyRepository
-	SolanaRPC                 *rpc.Client
-	Jupiter                   *jupiter.Client
-	Solscan                   *solscan.Client
-	HTTPClient                *resty.Client
+	TaskService           *TaskService
+	PriorityTracker       *PriorityTracker
+	SigTracker            *sigtracker.TxTracker
+	UserRepository        *repository.UserRepository
+	WalletTokenRepository *repository.WalletTokenRepository
+	WalletCacheStorage    *cache.WalletCacheStorage
+	privateKeyRepository  *cypher.PrivateKeyRepository
+	SolanaRPC             *rpc.Client
+	Jupiter               *jupiter.Client
+	Solscan               *solscan.Client
+	HTTPClient            *resty.Client
+	TransactionManager    *repo.TransactionManager
+
 	adminPrivateKey           solana.PrivateKey
 	SwapCommissionCoefficient float64
 	contractAddress           string
 	contractAddressAPI        string
 	moralisAPIKey             string
-	TransactionManager        *repo.TransactionManager
 }
 
 func NewWalletService(

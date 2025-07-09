@@ -9,6 +9,7 @@ import (
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Client struct {
@@ -131,4 +132,38 @@ func (c Client) GetSwapTransaction(
 	return &GetSwapTransactionResult{
 		SwapTransaction: parsedTx,
 	}, nil
+}
+
+type GetPriceResp struct {
+	UsdPrice       float64 `json:"usdPrice"`
+	BlockId        int64   `json:"blockId"`
+	Decimals       uint8   `json:"decimals"`
+	PriceChange24h float64 `json:"priceChange24h"`
+}
+
+func (c Client) Price(
+	ctx context.Context,
+	tokens ...string,
+) (map[string]GetPriceResp, error) {
+	const url = "price/v3"
+
+	result := make(map[string]GetPriceResp)
+	resp, err := c.client.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetQueryParam("ids", strings.Join(tokens, ",")).
+		SetResult(&result).
+		Get(url)
+	if err != nil {
+		return nil, apperrors.ServiceUnavailable("failed to get token prices from jupiter", err)
+	}
+
+	if !resp.IsSuccess() {
+		if resp.StatusCode() == http.StatusBadRequest {
+			return nil, apperrors.BadRequest("received bad request from jupiter "+url, err)
+		}
+		return nil, apperrors.ServiceUnavailable("failed to get token prices: non success status received", err)
+	}
+
+	return result, nil
 }

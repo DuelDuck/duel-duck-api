@@ -14,7 +14,7 @@ func DefaultWalletTokens(userID uuid.UUID) []model.WalletToken {
 	return []model.WalletToken{
 		{UserID: userID, Mint: solana.SolMint.String(), Name: "Solana", Symbol: "SOL", IsVisible: true},
 		{UserID: userID, Mint: USDCMintAddress.String(), Name: "USDC", Symbol: "USDC", IsVisible: true},
-		{UserID: userID, Mint: "DPOINT", Name: "DPOINT", Symbol: "DPOINT", IsVisible: true},
+		{UserID: userID, Mint: model.DuckPointMockMint, Name: model.DuckPointMockMint, Symbol: model.DuckPointMockMint, IsVisible: true},
 	}
 }
 
