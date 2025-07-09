@@ -1,0 +1,4748 @@
+definitions:
+  apperrors.ErrorPublic:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  auth.TokenPair:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  model.AddFAQMarkReq:
+    properties:
+      question_id:
+        type: integer
+      state:
+        type: integer
+    type: object
+  model.Coin:
+    properties:
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      rank:
+        type: integer
+      slug:
+        type: string
+      symbol:
+        type: string
+    type: object
+  model.CreateDuelEntityReq:
+    properties:
+      entity_type_id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      subtopic_id:
+        type: integer
+    type: object
+  model.CreateDuelReq:
+    properties:
+      answer:
+        type: integer
+      bg_url:
+        type: string
+      commission:
+        type: integer
+      deadline:
+        type: string
+      duel_info:
+        additionalProperties: {}
+        description: target_price for cmc resolver
+        type: object
+      duel_price:
+        type: integer
+      duel_type:
+        type: string
+      entities:
+        items:
+          type: integer
+        type: array
+      event_date:
+        type: string
+      image_url:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      question:
+        type: string
+      source_of_truth:
+        type: string
+      subtopic:
+        type: string
+      topic:
+        type: string
+      tournament_id:
+        type: string
+    type: object
+  model.CreateDuelSubtopicReq:
+    properties:
+      image_url:
+        type: string
+      name:
+        type: string
+      topic_id:
+        type: integer
+    type: object
+  model.DailyReward:
+    properties:
+      claimed:
+        type: boolean
+      day_streak:
+        type: integer
+    type: object
+  model.DuckPointsTransaction:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      recipient_address:
+        type: string
+      sender_address:
+        type: string
+    type: object
+  model.Duel:
+    properties:
+      approved_by:
+        type: string
+      bg_url:
+        type: string
+      cancellation_reason:
+        type: string
+      commission:
+        type: integer
+      created_at:
+        type: string
+      deadline:
+        type: string
+      duel_info:
+        additionalProperties: {}
+        type: object
+      duel_price:
+        type: integer
+      duel_type:
+        type: string
+      entities:
+        items:
+          type: integer
+        type: array
+      event_date:
+        type: string
+      final_result:
+        type: integer
+      id:
+        type: string
+      image_url:
+        type: string
+      owner_id:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      players_count:
+        type: integer
+      question:
+        type: string
+      refunded_players_count:
+        type: integer
+      resolved_by:
+        type: string
+      room_number:
+        type: integer
+      source_of_truth:
+        type: string
+      status:
+        type: integer
+      subtopic:
+        type: string
+      topic:
+        type: string
+      tournament_id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+      winners_count:
+        type: integer
+    type: object
+  model.DuelAdminAssignToTournamentReq:
+    properties:
+      duel_id:
+        type: string
+      tournament_id:
+        type: string
+    type: object
+  model.DuelAdminEditReq:
+    properties:
+      bg_url:
+        type: string
+      deadline:
+        type: string
+      duel_info:
+        additionalProperties: {}
+        type: object
+      duel_type:
+        type: string
+      entities:
+        items:
+          type: integer
+        type: array
+      event_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      question:
+        type: string
+      source_of_truth:
+        type: string
+      subtopic:
+        type: string
+    type: object
+  model.DuelApproveReq:
+    properties:
+      duel_id:
+        type: string
+    type: object
+  model.DuelCancelReq:
+    properties:
+      cancellation_reason:
+        type: string
+      duel_id:
+        type: string
+      status:
+        type: integer
+    type: object
+  model.DuelEntity:
+    properties:
+      entity_type_id:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      subtopic_id:
+        type: integer
+    type: object
+  model.DuelResolveReq:
+    properties:
+      answer:
+        type: integer
+      duel_id:
+        type: string
+    type: object
+  model.DuelShow:
+    properties:
+      approved_by:
+        type: string
+      bg_url:
+        type: string
+      cancellation_reason:
+        type: string
+      commission:
+        type: integer
+      created_at:
+        type: string
+      deadline:
+        type: string
+      duel_info:
+        additionalProperties: {}
+        type: object
+      duel_price:
+        type: integer
+      duel_type:
+        type: string
+      entities:
+        items:
+          type: integer
+        type: array
+      event_date:
+        type: string
+      final_result:
+        type: integer
+      id:
+        type: string
+      image_url:
+        type: string
+      joined:
+        type: boolean
+      no_count:
+        type: integer
+      owner_id:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      player_status:
+        type: integer
+      players_count:
+        type: integer
+      question:
+        type: string
+      refunded_players_count:
+        type: integer
+      resolved_by:
+        type: string
+      room_number:
+        type: integer
+      source_of_truth:
+        type: string
+      status:
+        type: integer
+      subtopic:
+        type: string
+      topic:
+        type: string
+      tournament_id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+      winners_count:
+        type: integer
+      yes_count:
+        type: integer
+      your_answer:
+        type: integer
+    type: object
+  model.DuelSubtopic:
+    properties:
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      topic_id:
+        type: integer
+    type: object
+  model.DuelTopicCounter:
+    properties:
+      topic:
+        type: string
+      total_duels:
+        type: integer
+    type: object
+  model.FAQ:
+    properties:
+      answer:
+        type: string
+      answer_created_at:
+        type: string
+      answer_id:
+        type: integer
+      answer_images:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      is_answered:
+        type: boolean
+      is_marked:
+        type: boolean
+      is_me:
+        type: boolean
+      marks_value:
+        type: integer
+      question:
+        type: string
+      question_created_at:
+        type: string
+      question_images:
+        items:
+          type: string
+        type: array
+    type: object
+  model.GetTransactionHistoryResp:
+    properties:
+      transactions:
+        items:
+          $ref: '#/definitions/model.Transaction'
+        type: array
+      types:
+        items:
+          $ref: '#/definitions/model.TransactionType'
+        type: array
+    type: object
+  model.JoinCryptoDuelResp:
+    properties:
+      duel:
+        $ref: '#/definitions/model.Player'
+      tx_hash:
+        type: string
+    type: object
+  model.JoinDuelReq:
+    properties:
+      answer:
+        type: integer
+      duel_id:
+        type: string
+    type: object
+  model.Leader:
+    properties:
+      earned:
+        type: number
+      pnl:
+        type: number
+      rank:
+        type: integer
+      spent:
+        type: number
+      total_duels:
+        type: integer
+      user_id:
+        type: string
+      username:
+        type: string
+      victories:
+        type: integer
+    type: object
+  model.ModeratorStats:
+    properties:
+      action_type:
+        type: string
+      bonuses:
+        type: number
+      created_at:
+        type: string
+      creation_pay:
+        type: number
+      duel_bank:
+        type: integer
+      duel_id:
+        type: string
+      duel_question:
+        type: string
+      is_custom:
+        type: boolean
+      moderator_id:
+        type: string
+    type: object
+  model.Player:
+    properties:
+      answer:
+        type: integer
+      created_at:
+        type: string
+      duel_id:
+        type: string
+      final_status:
+        type: integer
+      id:
+        type: string
+      is_winner:
+        type: boolean
+      user_id:
+        type: string
+      win_amount:
+        type: number
+    type: object
+  model.PlayerShow:
+    properties:
+      answer:
+        type: integer
+      created_at:
+        type: string
+      duel_id:
+        type: string
+      final_status:
+        type: integer
+      id:
+        type: string
+      image_url:
+        type: string
+      is_winner:
+        type: boolean
+      user_id:
+        type: string
+      username:
+        type: string
+      win_amount:
+        type: number
+    type: object
+  model.SendCode:
+    properties:
+      email:
+        type: string
+    type: object
+  model.SignInWithEmail:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      referrer_token:
+        type: string
+    type: object
+  model.SignInWithGoogle:
+    properties:
+      referrer_token:
+        type: string
+    type: object
+  model.SignInWithTelegramMiniAppReq:
+    properties:
+      init_data_raw:
+        type: string
+      referral_token:
+        type: string
+    type: object
+  model.SignInWithTelegramWeb:
+    properties:
+      code:
+        type: string
+      telegram_id:
+        type: string
+    type: object
+  model.SolanaToken:
+    properties:
+      daily_volume:
+        type: number
+      decimals:
+        type: integer
+      image_url:
+        type: string
+      mint:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+    type: object
+  model.SolscanTokenAccountsResp:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.TokenAccount'
+        type: array
+      metadata:
+        properties:
+          tokens:
+            additionalProperties:
+              $ref: '#/definitions/model.SolscanTokenMetadata'
+            type: object
+        type: object
+    type: object
+  model.SolscanTokenMetadata:
+    properties:
+      token_address:
+        type: string
+      token_icon:
+        type: string
+      token_name:
+        type: string
+      token_symbol:
+        type: string
+    type: object
+  model.SwapReq:
+    properties:
+      amount:
+        type: number
+      input_mint:
+        type: string
+      output_mint:
+        type: string
+    type: object
+  model.TokenAccount:
+    properties:
+      amount:
+        type: integer
+      owner:
+        type: string
+      token_account:
+        type: string
+      token_address:
+        type: string
+      token_decimals:
+        type: integer
+    type: object
+  model.Tournament:
+    properties:
+      author:
+        type: string
+      bg_card_url:
+        type: string
+      bg_url:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      finish_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      instagram_url:
+        type: string
+      name:
+        type: string
+      owner_id:
+        type: string
+      players_count:
+        type: integer
+      reward_pool_dp:
+        type: integer
+      reward_pool_usdc:
+        type: integer
+      start_date:
+        type: string
+      url:
+        type: string
+      x_url:
+        type: string
+      youtube_url:
+        type: string
+    type: object
+  model.TournamentCreateData:
+    properties:
+      author:
+        type: string
+      bg_url:
+        type: string
+      description:
+        type: string
+      finish_date:
+        type: string
+      image_url:
+        type: string
+      instagram_url:
+        type: string
+      name:
+        type: string
+      reward_pool_dp:
+        type: integer
+      reward_pool_usdc:
+        type: integer
+      start_date:
+        type: string
+      url:
+        type: string
+      x_url:
+        type: string
+      youtube_url:
+        type: string
+    type: object
+  model.TournamentCreateReq:
+    properties:
+      rewards:
+        items:
+          $ref: '#/definitions/model.TournamentReward'
+        type: array
+      tournament:
+        $ref: '#/definitions/model.TournamentCreateData'
+    type: object
+  model.TournamentLeaderboard:
+    properties:
+      earned:
+        type: number
+      last_predicted_at:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      pnl:
+        type: number
+      spent:
+        type: integer
+      total_duels:
+        type: integer
+      tournament_id:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+      victories:
+        type: integer
+    type: object
+  model.TournamentOfferReq:
+    properties:
+      contact:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      project_link:
+        type: string
+    type: object
+  model.TournamentRank:
+    properties:
+      earned:
+        type: number
+      last_predicted_at:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      pnl:
+        type: number
+      rank:
+        type: integer
+      spent:
+        type: integer
+      total_duels:
+        type: integer
+      tournament_id:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+      victories:
+        type: integer
+    type: object
+  model.TournamentReward:
+    properties:
+      dp_amount:
+        type: number
+      from_rank:
+        type: integer
+      to_rank:
+        type: integer
+      tournament_id:
+        type: string
+      usdc_amount:
+        type: number
+    type: object
+  model.TournamentRewardsUpdateReq:
+    properties:
+      rewards:
+        items:
+          $ref: '#/definitions/model.TournamentReward'
+        type: array
+      tournament_id:
+        type: string
+    type: object
+  model.TournamentUserShow:
+    properties:
+      bg_card_url:
+        type: string
+      finish_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      payment_type:
+        $ref: '#/definitions/mtype.PaymentType'
+      players_count:
+        type: integer
+      pnl:
+        type: number
+      start_date:
+        type: string
+      total_duels:
+        type: integer
+      url:
+        type: string
+      victories:
+        type: integer
+    type: object
+  model.Transaction:
+    properties:
+      address:
+        type: string
+      amount:
+        type: integer
+      block_id:
+        type: integer
+      block_time:
+        type: integer
+      change_type:
+        type: string
+      fee:
+        type: integer
+      post_balance:
+        type: integer
+      pre_balance:
+        type: integer
+      token_account:
+        type: string
+      token_address:
+        type: string
+      token_decimals:
+        type: integer
+      trans_id:
+        type: string
+    type: object
+  model.TransactionType:
+    properties:
+      signature:
+        type: string
+      tx_type:
+        type: integer
+    type: object
+  model.TransferReq:
+    properties:
+      amount:
+        type: integer
+      recipient:
+        type: string
+    type: object
+  model.User:
+    properties:
+      balance:
+        type: integer
+      bg_url:
+        type: string
+      bio:
+        type: string
+      created_at:
+        type: string
+      current_xp:
+        type: integer
+      daily_reward_streak:
+        type: integer
+      discord_url:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      instagram_url:
+        type: string
+      is_premium:
+        type: boolean
+      last_completed_streak:
+        type: string
+      level:
+        type: integer
+      public_address:
+        type: string
+      referral_token:
+        type: string
+      role:
+        $ref: '#/definitions/mtype.Role'
+      sol_autoswap:
+        type: boolean
+      telegram_id:
+        type: string
+      telegram_url:
+        type: string
+      two_fa:
+        type: boolean
+      two_fa_secret:
+        type: string
+      updated_at:
+        type: string
+      usdc_autoswap:
+        type: boolean
+      username:
+        type: string
+      website:
+        type: string
+      x_url:
+        type: string
+      youtube_url:
+        type: string
+    type: object
+  model.UserEditReq:
+    properties:
+      discord_url:
+        type: string
+      instagram_url:
+        type: string
+      sol_autoswap:
+        type: boolean
+      telegram_url:
+        type: string
+      usdc_autoswap:
+        type: boolean
+      website:
+        type: string
+      x_url:
+        type: string
+      youtube_url:
+        type: string
+    type: object
+  model.UserReferralShow:
+    properties:
+      created_at:
+        type: string
+      income_dp:
+        type: integer
+      income_usdc:
+        type: number
+      referral_commission_end:
+        type: string
+      referral_id:
+        type: string
+      referrer_id:
+        type: string
+      username:
+        type: string
+    type: object
+  model.UserReferralStats:
+    properties:
+      id:
+        type: string
+      referral_count:
+        type: integer
+      referral_income_dp:
+        type: integer
+      referral_income_usdc:
+        type: number
+      referral_token:
+        type: string
+    type: object
+  model.UsernameChange:
+    properties:
+      username:
+        type: string
+    type: object
+  model.WalletToken:
+    properties:
+      image_url:
+        type: string
+      is_swappable:
+        type: boolean
+      is_visible:
+        type: boolean
+      mint:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.WalletTokenEditReq:
+    properties:
+      is_swappable:
+        type: boolean
+      is_visible:
+        type: boolean
+      mint:
+        type: string
+    type: object
+  mtype.PaymentType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - PaymentTypeDuck
+    - PaymentTypeUSDC
+  mtype.Role:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - UserRole
+    - AdminRole
+  v1.DeleteFileReq:
+    properties:
+      image_url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a swagger specification for a Duel Duck back-end.
+  title: Duel Duck API
+  version: "1.0"
+paths:
+  /admin/delete-image:
+    post:
+      consumes:
+      - application/json
+      description: Allows an admin to delete an image file previously uploaded. The
+        image will be removed from storage.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Image deletion request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.DeleteFileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image deleted successfully
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during image deletion
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Delete an admin-uploaded image
+      tags:
+      - admin
+  /admin/duel:
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin to edit the details of an existing duel. Requires
+        admin authorization. The duel to be edited and the new details are provided
+        in the request body.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel edit data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelAdminEditReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel edited successfully
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel edit
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Edit an existing duel as admin
+      tags:
+      - admin
+  /admin/duel/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new duel by admin with the provided duel data
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel created successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create new duel
+      tags:
+      - admin
+  /admin/duel/approve:
+    put:
+      consumes:
+      - application/json
+      description: Approve a duel by admin with the provided approval data and make
+        it public after creation
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel approval data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelApproveReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel approved successfully and made public
+          schema:
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel approval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Approve duel by admin
+      tags:
+      - admin
+  /admin/duel/assign-to-tournament:
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin to assign or unassign a duel to a tournament. Requires
+        admin authorization. The duel and tournament IDs are provided in the request
+        body.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel and tournament assignment data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelAdminAssignToTournamentReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel assigned to tournament successfully
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during assignment
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Assign a duel to a tournament as admin
+      tags:
+      - admin
+  /admin/duel/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an existing Duck Point duel as an admin. Requires admin
+        authorization. The duel is identified and canceled based on the provided request
+        data.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel cancellation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelCancelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel canceled successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel cancellation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Cancel a Duck Point duel by admin
+      tags:
+      - admin
+  /admin/duel/crypto:
+    post:
+      consumes:
+      - application/json
+      description: Create a new crypto duel by admin with the provided duel data
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Crypto duel creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Crypto duel created successfully
+          schema:
+            $ref: '#/definitions/model.Duel'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during crypto duel creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create new crypto duel
+      tags:
+      - admin
+  /admin/duel/crypto/approve:
+    put:
+      consumes:
+      - application/json
+      description: Approve a crypto duel by admin with the provided approval data
+        and make it public after creation
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Crypto duel approval data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelApproveReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Crypto duel approved successfully and made public
+          schema:
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during crypto duel approval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Approve crypto duel by admin
+      tags:
+      - admin
+  /admin/duel/crypto/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an existing crypto duel as an admin. Requires admin authorization.
+        The duel is identified and canceled based on the provided request data. Returns
+        the transaction hashes of the cancellation operations.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel cancellation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelCancelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel canceled successfully, returning transaction hashes
+          schema:
+            properties:
+              tx_hashes:
+                items:
+                  type: string
+                type: array
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel cancellation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: External services are unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Cancel a crypto duel by admin
+      tags:
+      - admin
+  /admin/duel/crypto/resolve:
+    put:
+      consumes:
+      - application/json
+      description: Resolve a crypto duel by admin with the provided resolution data
+        and return transaction hashes
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel resolution data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelResolveReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Crypto duel resolved successfully with transaction hashes
+          schema:
+            properties:
+              tx_hashes:
+                items:
+                  type: string
+                type: array
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during crypto duel resolution
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Resolve crypto duel by admin
+      tags:
+      - admin
+  /admin/duel/entity:
+    post:
+      consumes:
+      - application/json
+      description: Allows an admin to create a new duel entity by providing entity
+        details. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel entity creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelEntityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel entity created successfully
+          schema:
+            $ref: '#/definitions/model.DuelEntity'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "409":
+          description: Duel entity already exists
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel entity creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create a new duel entity
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin to update the details of an existing duel entity.
+        Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel entity update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelEntity'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel entity updated successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel entity not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel entity update
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Update an existing duel entity
+      tags:
+      - admin
+  /admin/duel/moderator-stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve statistics relevant to the moderator, such as counts and
+        activity, with optional filtering, ordering, and pagination via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Moderator statistics retrieved successfully
+          schema:
+            $ref: '#/definitions/model.ModeratorStats'
+        "400":
+          description: Invalid request params or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during moderator stats retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get moderator statistics
+      tags:
+      - admin
+  /admin/duel/resolve:
+    put:
+      consumes:
+      - application/json
+      description: Resolve a duck point duel by admin with the provided resolution
+        data
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel resolution data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelResolveReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel resolved successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - claims not found or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden - admin permissions required
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel resolution
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Resolve duck point duel by admin
+      tags:
+      - admin
+  /admin/duel/subtopic:
+    post:
+      consumes:
+      - application/json
+      description: Allows an admin to create a new duel subtopic with the provided
+        data. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel subtopic creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelSubtopicReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel subtopic created successfully
+          schema:
+            $ref: '#/definitions/model.DuelSubtopic'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "409":
+          description: Duel subtopic already exists
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel subtopic creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create a new duel subtopic
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin to update an existing duel subtopic with the provided
+        data. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel subtopic update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DuelSubtopic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel subtopic updated successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel subtopic not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during duel subtopic update
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Update an existing duel subtopic
+      tags:
+      - admin
+  /admin/upload-image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Allows an admin to upload an image file. The uploaded image will
+        be saved and a URL to the image will be returned.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Image file to upload
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image uploaded successfully, returns image_url
+          schema:
+            properties:
+              image_url:
+                type: string
+            type: object
+        "400":
+          description: Invalid request data or missing image file
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during image upload
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Upload an image for admin use
+      tags:
+      - admin
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes the user's JWT tokens using the provided refresh token
+        from the Authorization header. Returns a new pair of access and refresh tokens.
+      parameters:
+      - default: Bearer <refresh_token>
+        description: Bearer refresh token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully refreshed tokens
+          schema:
+            properties:
+              jwt_info:
+                $ref: '#/definitions/auth.TokenPair'
+            type: object
+        "401":
+          description: Unauthorized - Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Refresh JWT tokens
+      tags:
+      - auth
+  /auth/send-code:
+    post:
+      consumes:
+      - application/json
+      description: Sends a verification code to the specified email address. The code
+        is required for email-based sign-in or sign-up.
+      parameters:
+      - description: Email address to send the verification code to
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verification code sent successfully
+        "400":
+          description: Invalid request data or email format
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during code sending
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Send verification code to email
+      tags:
+      - auth
+  /auth/sign-in-email:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Authenticates a user or creates a new account using an email and a verification code.
+        A verification code must be obtained first via the /send-code endpoint.
+        If the user does not exist, a new account is created. An optional referrer token can be provided to link the new user to a referrer.
+        On successful authentication, it returns the user's profile, a JWT token pair (access and refresh), and information about their daily login streak reward.
+      parameters:
+      - description: Sign-in request with email, verification code, and optional referrer
+          token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SignInWithEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful sign-in or sign-up, returning user data, JWT tokens,
+            and daily reward info
+          schema:
+            properties:
+              daily_reward:
+                $ref: '#/definitions/model.DailyReward'
+              jwt_info:
+                $ref: '#/definitions/auth.TokenPair'
+              user:
+                $ref: '#/definitions/model.User'
+            type: object
+        "400":
+          description: Invalid request data or email format
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Invalid verification code
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found (error during sign-in process)
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during token generation or other processes
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: User Sign-In/Sign-Up with Email
+      tags:
+      - auth
+  /auth/sign-in-google:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using Google credentials and returns user
+        data with JWT tokens. The email is validated through Google's authentication
+        system and a new session is created.
+      parameters:
+      - description: Google sign in request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SignInWithGoogle'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            properties:
+              daily_reward:
+                type: integer
+              jwt_info:
+                $ref: '#/definitions/auth.TokenPair'
+              user:
+                $ref: '#/definitions/model.User'
+            type: object
+        "400":
+          description: Invalid request data or missing email
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid Google token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - GoogleAuth: []
+      summary: Sign in user with Google authentication
+      tags:
+      - auth
+  /auth/sign-in-telegram:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using Telegram Mini App init data. Validates
+        the init data hash and creates/updates user account. Returns user data and
+        JWT tokens.
+      parameters:
+      - description: Telegram init data and additional parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SignInWithTelegramMiniAppReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            properties:
+              daily_reward:
+                type: integer
+              jwt_info:
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                type: object
+              user:
+                $ref: '#/definitions/model.User'
+            type: object
+        "400":
+          description: Invalid request data or failed to parse init data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Invalid telegram init data hash or login timeout
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Sign in user with Telegram Mini App
+      tags:
+      - auth
+  /auth/sign-in-telegram-web:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using previously generated Telegram authentication
+        data. Validates the provided code against stored code for the given Telegram
+        ID and creates/updates user account. Returns user data and JWT tokens.
+      parameters:
+      - description: Telegram authentication data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SignInWithTelegramWeb'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            properties:
+              daily_reward:
+                type: integer
+              jwt_info:
+                $ref: '#/definitions/auth.TokenPair'
+              user:
+                $ref: '#/definitions/model.User'
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Invalid or expired authentication code
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Sign in user with Telegram Web authentication
+      tags:
+      - auth
+  /coins:
+    post:
+      consumes:
+      - application/json
+      description: Retrieve a list of all coins with support for filtering, ordering,
+        and pagination via query parameters
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of coins retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.Coin'
+            type: array
+        "400":
+          description: Invalid request params
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get all coins with optional filtering, ordering, and pagination
+      tags:
+      - coins
+  /coins/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve Solana token information by searching for tokens with
+        the specified name
+      parameters:
+      - description: Token name to search for
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of tokens matching the name
+          schema:
+            items:
+              $ref: '#/definitions/model.SolanaToken'
+            type: array
+        "400":
+          description: Invalid request data or empty token name
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during token retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get Solana token by name
+      tags:
+      - coins
+  /coins/mint/{mint}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve Solana token information by searching for tokens with
+        the specified mint address
+      parameters:
+      - description: Mint address to search for
+        in: path
+        name: mint
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token information retrieved successfully
+          schema:
+            $ref: '#/definitions/model.SolanaToken'
+        "400":
+          description: Invalid request data or invalid mint address format
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Token with provided mint address not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during token retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get Solana token by mint address
+      tags:
+      - coins
+  /coins/solana-price:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the current price of Solana cryptocurrency
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current Solana price retrieved successfully
+          schema:
+            properties:
+              solana_price:
+                type: number
+            type: object
+        "500":
+          description: Internal server error during price retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: External service unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get current Solana price
+      tags:
+      - coins
+  /crypto-duel:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new cryptocurrency-based duel with the specified parameters.
+        Requires authentication and proper request data. This endpoint is specifically
+        for creating duels that use cryptocurrency as payment.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel creation request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel created successfully
+          schema:
+            $ref: '#/definitions/model.Duel'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create a new crypto duel
+      tags:
+      - duel
+  /crypto-duel/token-accounts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the balances of all token accounts associated with the
+        authenticated user's public blockchain address. Requires authentication. Supports
+        filtering and pagination via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: '"token"'
+        description: Type of token account to filter (e.g. SPL, NFT, etc.)
+        in: query
+        name: type
+        type: string
+      - default: 1
+        description: Page number for pagination (starts from 1)
+        in: query
+        name: page_number
+        type: integer
+      - default: 20
+        description: Number of token accounts per page
+        in: query
+        name: page_size
+        type: integer
+      - description: Hide token accounts with zero balance
+        in: query
+        name: hide_zero
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token account balances retrieved successfully
+          schema:
+            $ref: '#/definitions/model.SolscanTokenAccountsResp'
+        "400":
+          description: Invalid request data or query parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: External service unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get token account balances for the authenticated user's public address
+      tags:
+      - duel
+  /crypto-duel/transaction-history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction history for the authenticated user's
+        public blockchain address. Requires authentication. Supports filtering and
+        pagination via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 1
+        description: Page number for pagination (starts from 1)
+        in: query
+        name: page_number
+        type: integer
+      - default: 20
+        description: Number of transactions per page
+        in: query
+        name: page_size
+        type: integer
+      - description: Whether to remove spam transactions from the results
+        in: query
+        name: remove_spam
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction history retrieved successfully
+          schema:
+            $ref: '#/definitions/model.GetTransactionHistoryResp'
+        "400":
+          description: Invalid request data or query parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: Explorer service unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get transaction history for the authenticated user's public address
+      tags:
+      - duel
+  /crypto-duel/transaction-types:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the types of transactions for the provided list of transaction
+        signatures.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: List of transaction signatures to query types for
+        in: query
+        items:
+          type: string
+        name: signatures
+        required: true
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction types retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.TransactionType'
+            type: array
+        "400":
+          description: Invalid request data or query parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during transaction type retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get transaction types by signatures
+      tags:
+      - duel
+  /duel/:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new duel with the specified parameters. Requires authentication
+        and proper request data.
+      parameters:
+      - description: Duel creation request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel created successfully
+          schema:
+            $ref: '#/definitions/model.Duel'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create a new duel
+      tags:
+      - duel
+  /duel/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a duel by its ID for the authenticated user. Returns the
+        duel details and the list of players. Requires authentication.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel details and players list
+          schema:
+            properties:
+              duel:
+                $ref: '#/definitions/model.DuelShow'
+              players:
+                items:
+                  $ref: '#/definitions/model.PlayerShow'
+                type: array
+            type: object
+        "400":
+          description: Invalid duel ID
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get duel by ID (authorized)
+      tags:
+      - duel
+  /duel/all:
+    get:
+      consumes:
+      - application/json
+      description: Get all duels with optional filtering, sorting and pagination
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - default: created_at
+        description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: First filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: First filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: First filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: First filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duels
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelShow'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get all duels
+      tags:
+      - duel
+  /duel/all-with-joined:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all duels and for each duel, indicates if the authenticated
+        user is a participant. Supports optional filtering, sorting, and pagination.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: First filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: First filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: First filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: First filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duels with participation status
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelShow'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get all duels with user's participation status
+      tags:
+      - duel
+  /duel/count:
+    get:
+      consumes:
+      - application/json
+      description: Get a count of all duels, with optional filtering.
+      parameters:
+      - description: First filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: First filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: First filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: First filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total number of duels
+          schema:
+            type: integer
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Count all duels
+      tags:
+      - duel
+  /duel/counters:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the count of duels grouped by topic, with optional filtering,
+        sorting, and pagination. Does not require authentication.
+      parameters:
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duels count grouped by topic
+          schema:
+            $ref: '#/definitions/model.DuelTopicCounter'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get duels count grouped by topic
+      tags:
+      - duel
+  /duel/counters-not-joined:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the count of duels grouped by topic for the authenticated
+        user, excluding duels the user has already joined. Supports advanced filtering
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duels count grouped by topic for the authenticated user
+          schema:
+            $ref: '#/definitions/model.DuelTopicCounter'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get individual duels count grouped by topic (excluding joined duels)
+      tags:
+      - duel
+  /duel/entities:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all available duel entities with optional filtering,
+        ordering, and pagination via query parameters.
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duel entities
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelEntity'
+            type: array
+        "400":
+          description: Invalid request params or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: List all duel entities
+      tags:
+      - duel
+  /duel/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the authenticated user's duel history with optional filtering,
+        sorting, and pagination.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's historical duels
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelShow'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get user's duel history
+      tags:
+      - duel
+  /duel/join:
+    post:
+      consumes:
+      - application/json
+      description: Allows an authenticated user to join an existing duel by providing
+        the duel ID and their answer. The user must have sufficient balance to join
+        the duel.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel join request containing duel ID and player's answer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.JoinDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully joined the duel
+          schema:
+            $ref: '#/definitions/model.Player'
+        "400":
+          description: Invalid request data or insufficient balance
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Join an existing duel
+      tags:
+      - duel
+  /duel/join-crypto:
+    post:
+      consumes:
+      - application/json
+      description: Allows an authenticated user to join an existing crypto duel by
+        providing the duel ID and their answer. The user must have sufficient balance
+        to join the duel.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Duel join request containing duel ID and player's answer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.JoinDuelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully joined the crypto duel
+          schema:
+            $ref: '#/definitions/model.JoinCryptoDuelResp'
+        "400":
+          description: Invalid request data or insufficient balance
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Crypto duel not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - Bearer: []
+      - BearerAuth: []
+      summary: Join a crypto duel
+      tags:
+      - duel
+  /duel/leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve leaderboard data with optional filtering, ordering, and
+        pagination via query parameters
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response with 'leaders' ([]model.Leader) and 'leader_count'
+            (int)
+          schema:
+            properties:
+              leader_count:
+                type: integer
+              leaders:
+                items:
+                  $ref: '#/definitions/model.Leader'
+                type: array
+            type: object
+        "400":
+          description: Invalid request data or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during leaderboard retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get leaderboard data
+      tags:
+      - duel
+  /duel/my:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of duels created by or assigned to the
+        authenticated user. Supports advanced filtering, ordering, and pagination
+        via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duels belonging to the authenticated user
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelShow'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get my duels
+      tags:
+      - duel
+  /duel/participating:
+    get:
+      consumes:
+      - application/json
+      description: Get all duels where the authenticated user is a participant, with
+        optional filtering, sorting and pagination.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - default: created_at
+        description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: First filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: First filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: First filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: First filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duels
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelShow'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get all duels where the user is a participant
+      tags:
+      - duel
+  /duel/public/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a duel by its ID without requiring authentication. Returns
+        the duel details if found.
+      parameters:
+      - description: Duel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duel details
+          schema:
+            $ref: '#/definitions/model.Duel'
+        "400":
+          description: Invalid duel ID
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Duel not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get duel by ID (public)
+      tags:
+      - duel
+  /duel/subtopics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all available duel subtopics with optional filtering,
+        ordering, and pagination via JSON body parameters.
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of duel subtopics
+          schema:
+            items:
+              $ref: '#/definitions/model.DuelSubtopic'
+            type: array
+        "400":
+          description: Invalid request params or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: List all duel subtopics
+      tags:
+      - duel
+  /duel/user-rank:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the leaderboard rank and stats for the authenticated
+        user, with optional filtering, ordering, and pagination via query parameters.
+        Returns only the current user's rank, not the full leaderboard.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authenticated user's leaderboard rank and stats
+          schema:
+            $ref: '#/definitions/model.Leader'
+        "400":
+          description: Invalid request data or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found in leaderboard
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during leaderboard rank retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get the authenticated user's leaderboard rank
+      tags:
+      - duel
+  /faq:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all FAQs with optional filtering, sorting, and
+        pagination.
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page number (starting from 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of FAQs with pagination info
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get all FAQs
+      tags:
+      - faq
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a new FAQ entry with the provided question and optional
+        images.
+      parameters:
+      - description: Question text
+        in: formData
+        name: question
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Images to upload
+        in: formData
+        items:
+          type: file
+        name: images
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: FAQ created successfully
+          schema:
+            $ref: '#/definitions/model.FAQ'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Create a new FAQ
+      tags:
+      - faq
+  /faq/mark:
+    put:
+      consumes:
+      - application/json
+      description: Adds a mark to an existing FAQ entry.
+      parameters:
+      - description: Mark request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddFAQMarkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success status
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Unauthorized - Invalid or missing claims
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Add a mark to an FAQ
+      tags:
+      - faq
+  /stats/user:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the referral statistics (such as total referrals, income,
+        etc.) for the currently authenticated user.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Referral statistics retrieved successfully
+          schema:
+            $ref: '#/definitions/model.UserReferralStats'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during referral stats retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get referral statistics for the authenticated user
+      tags:
+      - stats
+  /stats/user/count:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the total number of registered users in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total user count returned successfully
+          schema:
+            properties:
+              count:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error during user count retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get total user count
+      tags:
+      - stats
+  /stats/user/referrals:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the list of users referred by the currently authenticated
+        user, with optional filtering, ordering, and pagination via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of referred users retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.UserReferralShow'
+            type: array
+        "400":
+          description: Invalid request data or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during referral retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get referral list for the authenticated user
+      tags:
+      - stats
+  /tournament:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of all tournaments with optional filtering,
+        ordering, and pagination parameters.
+      parameters:
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of tournaments returned successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.Tournament'
+            type: array
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: List all tournaments
+      tags:
+      - tournament
+    post:
+      consumes:
+      - application/json
+      description: Creates a new tournament with specified rewards and tournament
+        data. Requires admin permissions.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Tournament creation request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TournamentCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tournament created successfully
+        "400":
+          description: Invalid request data or invalid rewards parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during tournament creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create new tournament
+      tags:
+      - tournament
+  /tournament/leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the leaderboard for a specific tournament with pagination,
+        filtering, and ordering options. Returns a list of tournament participants
+        ranked by their performance.
+      parameters:
+      - description: Tournament ID (UUID format)
+        in: query
+        name: tournament_id
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - default: '"pnl"'
+        description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tournament leaderboard retrieved successfully
+          schema:
+            properties:
+              leader_count:
+                type: integer
+              leaders:
+                items:
+                  $ref: '#/definitions/model.TournamentLeaderboard'
+                type: array
+            type: object
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get tournament leaderboard
+      tags:
+      - tournament
+  /tournament/my:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tournaments that the authenticated user participates
+        in. Supports filtering, ordering, and pagination via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User's tournaments retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.TournamentUserShow'
+            type: array
+        "400":
+          description: Invalid request params
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get user's tournaments
+      tags:
+      - tournament
+  /tournament/offer:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new tournament offer and sends notification via Telegram
+        bot
+      parameters:
+      - description: Tournament offer request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TournamentOfferReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tournament offer created successfully
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during offer creation or notification
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Create tournament offer
+      tags:
+      - tournament
+  /tournament/rank:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the authenticated user's rank and stats in the specified
+        tournament leaderboard. Supports filtering, ordering, and pagination via query
+        parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Tournament ID (UUID)
+        in: query
+        name: tournament_id
+        required: true
+        type: string
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User's tournament rank and stats returned successfully
+          schema:
+            $ref: '#/definitions/model.TournamentRank'
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found in tournament leaderboard
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get user's rank in a tournament leaderboard
+      tags:
+      - tournament
+  /tournament/rewards:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves rewards information for a specific tournament by tournament
+        ID
+      parameters:
+      - description: Tournament ID (UUID format)
+        in: query
+        name: tournament_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tournament rewards retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.TournamentReward'
+            type: array
+        "400":
+          description: Invalid request params or missing tournament ID
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Tournament not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Get tournament rewards
+      tags:
+      - tournament
+    put:
+      consumes:
+      - application/json
+      description: Updates the rewards configuration for a specific tournament. Only
+        authorized users with appropriate permissions can modify tournament rewards.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Tournament rewards update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TournamentRewardsUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tournament rewards updated successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Update tournament rewards
+      tags:
+      - tournament
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the profile information of the currently authenticated
+        user.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully.
+          schema:
+            $ref: '#/definitions/model.User'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during user retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get current authenticated user profile
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Updates the profile information of the currently authenticated
+        user.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User profile update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserEditReq'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User profile updated successfully
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during user update
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Edit current authenticated user profile
+      tags:
+      - user
+  /user/profile-picture:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Uploads and sets a new profile picture for the currently authenticated
+        user. The image file must be provided as multipart/form-data under the "image"
+        field.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Profile picture image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile picture updated successfully, returns the new image
+            URL
+          schema:
+            properties:
+              image_url:
+                type: string
+            type: object
+        "400":
+          description: Invalid request data or missing image file
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during profile picture update
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Set profile picture for the authenticated user
+      tags:
+      - user
+  /user/username:
+    put:
+      consumes:
+      - application/json
+      description: Updates the username for the currently authenticated user. The
+        new username must be valid and not already taken.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Username change payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UsernameChange'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Username changed successfully
+        "400":
+          description: Invalid request parameters or invalid username
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "409":
+          description: This username is already taken
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during username change
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Change the username of the authenticated user
+      tags:
+      - user
+  /user/username/{username}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves user information by the provided username. This endpoint
+        allows public access to view user profiles without authentication.
+      parameters:
+      - description: Username to search for
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information retrieved successfully
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: Invalid username format
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      summary: Find user by username
+      tags:
+      - user
+  /wallet/duck-points-transfer-history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the Duck Points transfer transaction history for the
+        authenticated user, supporting advanced filtering, ordering, and pagination
+        via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of Duck Points transfer transactions
+          schema:
+            items:
+              $ref: '#/definitions/model.DuckPointsTransaction'
+            type: array
+        "400":
+          description: Invalid request params or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get Duck Points transfer history
+      tags:
+      - wallet
+  /wallet/swap:
+    post:
+      consumes:
+      - application/json
+      description: Swaps a specified amount of one token (input mint) for another
+        (output mint) using the user's wallet. Returns the transaction hash of the
+        swap operation.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Swap request payload containing input mint, output mint, and
+          amount
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SwapReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Swap transaction hash returned successfully
+          schema:
+            properties:
+              tx_hash:
+                type: string
+            type: object
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Input or output mint not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during swap operation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: External service unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Swap tokens between two currencies in the user's wallet
+      tags:
+      - wallet
+  /wallet/token:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of tokens associated with the authenticated user's
+        wallet, supporting pagination, ordering, and filtering via query parameters.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's wallet tokens returned successfully
+          schema:
+            items:
+              $ref: '#/definitions/model.WalletToken'
+            type: array
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get user's wallet tokens
+      tags:
+      - wallet
+    post:
+      consumes:
+      - application/json
+      description: Adds a new token to the authenticated user's wallet. The token
+        mint address must be valid and not already present in the user's wallet.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Token to add to the user's wallet
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.WalletToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token added successfully
+        "400":
+          description: Invalid request data or failed to decode mint public key
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "409":
+          description: Token already added to user's wallet
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Add a token to the user's wallet
+      tags:
+      - wallet
+    put:
+      consumes:
+      - application/json
+      description: Updates the properties of a token associated with the authenticated
+        user's wallet.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Token edit request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.WalletTokenEditReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token updated successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Edit a token in the user's wallet
+      tags:
+      - wallet
+  /wallet/token/{mint}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a token from the authenticated user's wallet by its mint
+        address. The mint address must be provided as a path parameter.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Token mint address to remove from the user's wallet
+        in: path
+        name: mint
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token removed successfully
+        "400":
+          description: Invalid request data or missing mint address
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Remove a token from the user's wallet
+      tags:
+      - wallet
+  /wallet/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfers USDC from the authenticated user's wallet to a recipient's
+        wallet address.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transfer request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TransferReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction hash of the successful transfer
+          schema:
+            properties:
+              tx_hash:
+                type: string
+            type: object
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Recipient not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "503":
+          description: External service unavailable
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Transfer tokens to another user
+      tags:
+      - wallet
+  /wallet/transfer-duck-points:
+    post:
+      consumes:
+      - application/json
+      description: Transfers Duck Points from the authenticated user's account to
+        a recipient's DuelDuck account by public address.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transfer request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TransferReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Duck Points transferred successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Recipient not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Transfer Duck Points to another user
+      tags:
+      - wallet
+swagger: "2.0"

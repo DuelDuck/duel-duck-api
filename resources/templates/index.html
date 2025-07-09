@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Template</title>
+  <style>
+      body {
+          font-family: Helvetica, Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+      }
+  </style>
+</head>
+<body>
+<table width="100%" border="0" cellspacing="0" cellpadding="64" bgcolor="#070707">
+  <tr>
+    <td align="center" valign="top">
+      <table width="600" border="0" cellspacing="0" style="padding: 0px 24px;" bgcolor='#151515'>
+        <!-- Header -->
+        <td height="32" style='padding: 0;'></td>
+        <tr>
+          <td align="center"  height="64" valign="middle" style="padding: 0px;" >
+            <img src="https://api-stage.duelduck.com/static/duck.png" alt="DuelDuck logo" style="width: 64px; height: 64px;">
+          </td>
+        </tr>
+        <td height="24" style='padding: 0;'></td>
+        <tr >
+          <td align="center" style="padding: 0px;">
+            <p style="font-family: Helvetica, Arial, sans-serif;font-size:18px;line-height: 130%;color:#fff;font-weight:600;margin: 0;">
+              Quak Quak!
+            </p>
+            <p style="font-family: Helvetica, Arial, sans-serif;font-size:18px;line-height: 130%;color:#fff;font-weight:600;margin: 0;">
+              This is one-time password is good for 5 minutes.
+            </p>
+          </td>
+        </tr>
+        <!-- End Header -->
+
+        <!-- Main Content -->
+        <td height="32" style='padding: 0;'></td>
+        <tr>
+          <td align="center" valign="middle" height="58" style="padding: 0px;">
+            <p style="font-family: Helvetica, Arial, sans-serif;font-feature-settings: 'clig' off, 'liga' off;line-height: 120%;letter-spacing: 12px;font-weight: 600;font-size: 48px;color:#FFC54D;margin: 0">{{ .code_0 }}</p>
+          </td>
+        </tr>
+        <td height="32" style='padding: 0;'></td>
+        <!-- End Main Content -->
+
+        <!-- Footer -->
+        <tr>
+          <td height="32" style='padding: 0;'></td>
+        </tr>
+        <tr>
+          <td align="center" valign="middle" height="32" style="padding: 0px">
+            <a href="https://x.com/duelduckcom" target="_blank" rel="noopener noreferrer" style="text-decoration: none; margin-right: 24px">
+              <img src="https://api-stage.duelduck.com/static/x-icon.png" alt="Twitter" style="width: 32px; height: 32px;">
+            </a>
+            <a href="https://duelduck.com/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+              <img src="https://api-stage.duelduck.com/static/gray-duck.png" alt="Twitter" style="width: 32px; height: 32px;">
+            </a>
+          </td>
+        </tr>
+        <td height="24" style='padding: 0;'></td>
+        <tr>
+          <td align="center" valign="middle" height="34" style="padding: 0px;">
+            <p style="font-family: Helvetica, Arial, sans-serif;font-size:14px;line-height:140%;color:#A7A7A7;margin: 0;font-weight: 400;">Copyright © 2024 Duel Duck. All Rights Reserved. DUEL DUCK LCC 17 Duke St, London W1U 1DL, United Kingdom</p>
+          </td>
+        </tr>
+        <td height="32" style='padding: 0;'></td>
+        <!-- End Footer -->
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

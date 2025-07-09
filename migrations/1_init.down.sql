@@ -1,0 +1,30 @@
+DROP MATERIALIZED VIEW IF EXISTS leaderboard;
+DROP MATERIALIZED VIEW IF EXISTS tournament_leaderboard;
+DROP MATERIALIZED VIEW IF EXISTS tournament_leaderboard_dd;
+
+DROP TABLE IF EXISTS tournament_offers;
+DROP TABLE IF EXISTS tournament_rewards;
+DROP TABLE IF EXISTS tournament_participants;
+DROP TABLE IF EXISTS tournament_leaderboards;
+DROP TABLE IF EXISTS tournaments;
+DROP TABLE IF EXISTS players;
+DROP TABLE IF EXISTS duel_entities;
+DROP TABLE IF EXISTS duel_entity_types;
+DROP TABLE IF EXISTS duel_subtopics;
+DROP TABLE IF EXISTS duel_topics;
+DROP TABLE IF EXISTS duels;
+DROP TABLE IF EXISTS duel_types;
+DROP TABLE IF EXISTS wallets;
+DROP TABLE IF EXISTS user_referrals;
+DROP TABLE IF EXISTS completed_tasks;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS tg_channel_referrals;
+DROP TABLE IF EXISTS moderator_stats;
+DROP TABLE IF EXISTS duck_points_transactions;
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS solana_tokens;
+DROP TABLE IF EXISTS wallet_tokens;
+DROP TABLE IF EXISTS coins;
+DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS currency_type;
