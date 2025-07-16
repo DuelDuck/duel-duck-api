@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gagliardetto/solana-go"
 	lookup "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
@@ -19,10 +24,6 @@ import (
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	repo "gitlab.com/duel-duck/duel-duck-api/pkg/repository"
 	"go.uber.org/zap"
-	"math"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // TODO: Move variables to .env and config
@@ -33,8 +34,11 @@ var (
 )
 
 const (
-	USDCMintDecimals uint8 = 6
-	SolMintDecimals  uint8 = 9
+	USDCMintDecimals                uint8  = 6
+	USDCMintDecimalsMultiplier      uint64 = 1_000_000 // 10^6
+	USDCMintDecimalsMultiplierFloat        = float64(USDCMintDecimalsMultiplier)
+
+	SolMintDecimals uint8 = 9
 )
 
 type proceedTransferData struct {
@@ -112,8 +116,13 @@ func (s *WalletService) Transfer(
 		return "", apperrors.BadRequest("failed to prepare transaction data", err)
 	}
 
-	if err = s.HasEnoughTokenBalance(ctx, data.SenderTokenAddress, amount); err != nil {
+	hasEnoughBalance, err := s.HasEnoughTokenBalance(ctx, data.SenderTokenAddress, amount)
+	if err != nil {
 		return "", err
+	}
+
+	if !hasEnoughBalance {
+		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
 	}
 
 	// custom context instead of fiber context, so client isn't able to interrupt transaction
@@ -167,17 +176,15 @@ func (s *WalletService) HasEnoughTokenBalance(
 	ctx context.Context,
 	ata solana.PublicKey,
 	requiredAmount uint64,
-) error {
+) (bool, error) {
 	tokenBalance, err := s.GetTokenBalance(ctx, ata)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if tokenBalance < requiredAmount {
-		return apperrors.BadRequest("not enough balance to proceed a transaction", err)
-	}
+	fmt.Println("current token balance:", tokenBalance)
 
-	return nil
+	return tokenBalance >= requiredAmount, nil
 }
 
 func (s *WalletService) GetSolBalance(
@@ -196,17 +203,17 @@ func (s *WalletService) HasEnoughSolBalance(
 	ctx context.Context,
 	pk solana.PublicKey,
 	requiredAmount uint64,
-) error {
+) (bool, error) {
 	balance, err := s.GetSolBalance(ctx, pk)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if balance < requiredAmount {
-		return apperrors.BadRequest("not enough balance to proceed a transaction", err)
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
 
 const (
@@ -395,7 +402,7 @@ func (s *WalletService) simulateTransaction(
 ) (*rpc.SimulateTransactionResult, error) {
 	sTx, err := s.SolanaRPC.SimulateTransactionWithOpts(ctx, tx, opts)
 	if err != nil {
-		return nil, apperrors.ServiceUnavailable("failed to send transaction", err)
+		return nil, apperrors.ServiceUnavailable("failed to send transaction on simulation", err)
 	}
 
 	if sTx == nil {
@@ -569,12 +576,21 @@ func (s *WalletService) Swap(
 	rawAmount := uint64(amount * math.Pow10(int(decimals)))
 
 	if inputMint == solana.SolMint {
-		err = s.HasEnoughSolBalance(ctx, privateKey.PublicKey(), rawAmount)
+		hasEnough, err := s.HasEnoughSolBalance(ctx, privateKey.PublicKey(), rawAmount)
+		if err != nil {
+			return "", err
+		}
+		if !hasEnough {
+			return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+		}
 	} else {
-		err = s.HasEnoughTokenBalance(ctx, inputATA, rawAmount)
-	}
-	if err != nil {
-		return "", err
+		hasEnough, err := s.HasEnoughTokenBalance(ctx, inputATA, rawAmount)
+		if err != nil {
+			return "", err
+		}
+		if !hasEnough {
+			return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+		}
 	}
 
 	var platformFeeBPS int64 = 0
@@ -681,13 +697,16 @@ func (s *WalletService) swap(
 	}
 
 	_, err = tx.Sign(txSignerPrivateKeyGetter(signer))
+	if err != nil {
+		return "", apperrors.Internal("failed to sign transaction", err)
+	}
 
 	_, err = s.SolanaRPC.SimulateTransaction(ctx, tx)
 	if err != nil {
 		return "", apperrors.Internal("failed to simulate transaction", err)
 	}
 
-	sig, err := s.sendTransaction(ctx, tx, txSignerPrivateKeyGetter(signer))
+	sig, err := s.sendTxWithTracker(ctx, tx, txSignerPrivateKeyGetter(signer))
 	if err != nil {
 		return "", err
 	}

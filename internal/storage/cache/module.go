@@ -14,6 +14,7 @@ func Module() fx.Option {
 			NewCodeCacheStorage,
 			NewTelegramCacheStorage,
 			NewWalletCacheStorage,
+			NewTxNotificationStorage,
 		),
 	)
 }

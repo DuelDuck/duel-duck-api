@@ -36,6 +36,9 @@ func (h *WalletHandler) RegisterRoutes(app *fiber.App, auth *AuthHandler) {
 		walletGroup.Get("/duck-points-transfer-history", h.DuckPointsTransferHistory)
 
 		walletGroup.Post("/swap", h.SwapCurrencies)
+
+		walletGroup.Get("/notifications", h.GetAllTxNotifications)
+		walletGroup.Delete("/notifications", h.DeleteTxNotifications)
 	}
 
 	tokenGroup := walletGroup.Group("/token")
@@ -356,6 +359,63 @@ func (h *WalletHandler) RemoveTokenFromUserWallet(c fiber.Ctx) error {
 	}
 
 	err := h.WalletService.RemoveTokenFromUserWallet(c.Context(), claims.UserID, mint)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// @Summary		Get all swap notifications for the authenticated user
+// @Description	Retrieves all swap notifications associated with the authenticated user's wallet.
+// @Tags			wallet
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			Authorization	header		string					true	"Authorization Bearer token"
+// @Success		200				{array}		model.TxNotification	"List of transaction notifications"
+// @Failure		401				{object}	apperrors.ErrorPublic	"Authentication required or invalid credentials"
+// @Failure		500				{object}	apperrors.ErrorPublic	"Internal server error"
+// @Router			/wallet/tx-notifications [get]
+func (h *WalletHandler) GetAllTxNotifications(c fiber.Ctx) error {
+	claims, ok := c.Locals("claims").(auth.TokenClaims)
+	if !ok {
+		return apperrors.Unauthorized("claims not found")
+	}
+
+	notifications, err := h.WalletService.GetAllTxNotifications(c.Context(), claims.UserID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(notifications)
+}
+
+// @Summary		Delete transaction notifications
+// @Description	Deletes one or more transaction notifications for the authenticated user by their notification IDs.
+// @Tags			wallet
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			Authorization	header		string							true	"Authorization Bearer token"
+// @Param			request			body		model.TxNotificationDeleteReq	true	"List of notification IDs to delete"
+// @Success		200				{object}	nil								"Notifications deleted successfully"
+// @Failure		400				{object}	apperrors.ErrorPublic			"Invalid request data or missing notification IDs"
+// @Failure		401				{object}	apperrors.ErrorPublic			"Authentication required or invalid credentials"
+// @Failure		500				{object}	apperrors.ErrorPublic			"Internal server error"
+// @Router			/wallet/tx-notifications [delete]
+func (h *WalletHandler) DeleteTxNotifications(c fiber.Ctx) error {
+	var req model.TxNotificationDeleteReq
+	if err := c.Bind().JSON(&req); err != nil {
+		return apperrors.BadRequest("invalid request data")
+	}
+
+	claims, ok := c.Locals("claims").(auth.TokenClaims)
+	if !ok {
+		return apperrors.Unauthorized("claims not found")
+	}
+
+	err := h.WalletService.DeleteTxNotifications(c.Context(), claims.UserID, req.NotificationIDs)
 	if err != nil {
 		return err
 	}

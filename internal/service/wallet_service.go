@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-resty/resty/v2"
@@ -31,6 +32,7 @@ type WalletService struct {
 	UserRepository        *repository.UserRepository
 	WalletTokenRepository *repository.WalletTokenRepository
 	WalletCacheStorage    *cache.WalletCacheStorage
+	TxNotificationStorage *cache.TxNotificationStorage
 	privateKeyRepository  *cypher.PrivateKeyRepository
 	SolanaRPC             *rpc.Client
 	Jupiter               *jupiter.Client
@@ -55,6 +57,7 @@ func NewWalletService(
 	privateKeyRepository *cypher.PrivateKeyRepository,
 	walletCacheStorage *cache.WalletCacheStorage,
 	walletTokenRepository *repository.WalletTokenRepository,
+	txNotificationStorage *cache.TxNotificationStorage,
 	jupiter *jupiter.Client,
 	solscan *solscan.Client,
 	transactionManager *repo.TransactionManager,
@@ -75,6 +78,7 @@ func NewWalletService(
 		adminPrivateKey:           adminPrivateKey,
 		WalletCacheStorage:        walletCacheStorage,
 		WalletTokenRepository:     walletTokenRepository,
+		TxNotificationStorage:     txNotificationStorage,
 		SolanaRPC:                 solanaRPC,
 		HTTPClient:                resty.New(),
 		Jupiter:                   jupiter,
@@ -88,12 +92,12 @@ func NewWalletService(
 }
 
 const (
-	PEMBlockTypePublicKey = "PUBLIC KEY"
+	pemBlockTypePublicKey = "PUBLIC KEY"
 )
 
 func (s *WalletService) encryptWallet(publicKeyPem string, data string) (string, error) {
 	block, _ := pem.Decode([]byte(publicKeyPem))
-	if block == nil || block.Type != PEMBlockTypePublicKey {
+	if block == nil || block.Type != pemBlockTypePublicKey {
 		return "", apperrors.BadRequest("invalid format of public key")
 	}
 
@@ -218,4 +222,28 @@ func (s *WalletService) RemoveTokenFromUserWallet(
 	}
 
 	return nil
+}
+
+func (s *WalletService) GetAllTxNotifications(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]model.TxNotification, error) {
+	notifications, err := s.TxNotificationStorage.GetAll(ctx, userID)
+	if err != nil {
+		return nil, apperrors.Internal("failed to edit user wallet token", err)
+	}
+
+	return notifications, nil
+}
+
+func (s *WalletService) DeleteTxNotifications(
+	ctx context.Context,
+	userID uuid.UUID,
+	notificationIDs uuid.UUIDs,
+) error {
+	if len(notificationIDs) == 0 {
+		return apperrors.BadRequest("invalid request data: no ids provided")
+	}
+
+	return s.TxNotificationStorage.Delete(ctx, userID, notificationIDs)
 }

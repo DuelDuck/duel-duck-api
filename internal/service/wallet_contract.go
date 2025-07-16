@@ -16,6 +16,7 @@ import (
 	"github.com/goccy/go-json"
 	"gitlab.com/duel-duck/duel-duck-api/internal/model"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
+	"time"
 )
 
 func (s *WalletService) InitSolanaRoom(ctx context.Context, duel *model.Duel) (string, error) {
@@ -89,8 +90,20 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		return "", apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	if err = s.HasEnoughTokenBalance(ctx, userTokenAccount, duelPrice); err != nil {
-		return "", err
+	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
+	if err != nil {
+		return "", apperrors.Internal("failed to get user associated token balance", err)
+	}
+
+	var autoswapNeeded bool
+	if balance < duelPrice {
+		autoswapNeeded = true
+		requiredAmount := duelPrice - balance
+
+		err := s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	reqBody = map[string]interface{}{
@@ -117,6 +130,21 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
 		return "", err
+	}
+
+	if autoswapNeeded {
+		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 10*time.Second, 1*time.Second)
+		if err != nil {
+			return "", err
+		}
+
+		if !ok {
+			return "", apperrors.BadRequest("not enough token balance (timeout)")
+		}
+
+		// tmp solution for mvp.
+		// Sleep lets solana node have enough time to get user's updated balance after token swaps
+		time.Sleep(60 * time.Second)
 	}
 
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
@@ -186,12 +214,15 @@ func (s *WalletService) JoinSolanaRoom(
 		return "", apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	err = s.HasEnoughTokenBalance(
+	hasEnough, err := s.HasEnoughTokenBalance(
 		ctx,
 		userTokenAccount,
 		duel.DuelPrice*model.USDCPriceMultiplier)
 	if err != nil {
 		return "", err
+	}
+	if !hasEnough {
+		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
 	}
 
 	reqBody := map[string]any{"pda_nr": duel.RoomNumber}
@@ -282,8 +313,12 @@ func (s *WalletService) joinSolanaRoom(ctx context.Context, duel *model.Duel, us
 		return "", apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	if err = s.HasEnoughTokenBalance(ctx, userTokenAccount, duel.DuelPrice); err != nil {
+	hasEnough, err := s.HasEnoughTokenBalance(ctx, userTokenAccount, duel.DuelPrice)
+	if err != nil {
 		return "", err
+	}
+	if !hasEnough {
+		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
 	}
 
 	multiplier := (duel.PlayersCount)/10 + 1
