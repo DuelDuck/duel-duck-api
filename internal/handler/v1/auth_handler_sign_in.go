@@ -197,7 +197,7 @@ func (h *AuthHandler) SignInWithGoogle(c fiber.Ctx) error {
 		return apperrors.BadRequest("invalid request data")
 	}
 
-	user, err := h.UserService.SignInWithEmail(c.Context(), email, req.ReferrerToken)
+	user, err := h.UserService.SignInWithEmail(c.Context(), email, req.ReferrerToken, req.AdvertiserLinkToken)
 	if err != nil {
 		return err
 	}

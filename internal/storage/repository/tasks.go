@@ -167,6 +167,7 @@ func (r *TaskRepository) GetTasksByUserID(ctx context.Context, userID uuid.UUID)
 			"xp",
 			"completion_limit",
 			"completion_limit_period",
+			"auto_completion",
 			"link",
 			"t.created_at",
 			"c.reward_claimed",
@@ -198,6 +199,7 @@ func (r *TaskRepository) GetTaskByID(ctx context.Context, id uint64) (*model.Tas
 			"xp",
 			"completion_limit",
 			"completion_limit_period",
+			"auto_completion",
 			"link",
 			"t.created_at",
 		).
@@ -228,6 +230,7 @@ func (r *TaskRepository) GetTaskByIDAndUserID(
 			"xp",
 			"completion_limit",
 			"completion_limit_period",
+			"auto_completion",
 			"link",
 			"t.created_at",
 			"c.reward_claimed",
@@ -245,7 +248,7 @@ func (r *TaskRepository) GetTaskByIDAndUserID(
 	return task, nil
 }
 
-func (r *TaskRepository) CompletedByUserID(
+func (r *TaskRepository) FindCompletedByUserID(
 	ctx context.Context,
 	userID uuid.UUID,
 	taskID uint64,
@@ -269,22 +272,22 @@ func (r *TaskRepository) CompletedByUserID(
 }
 
 func (r *TaskRepository) GetUnclaimedRewards(
-    ctx context.Context,
-    id uint64,
+	ctx context.Context,
+	id uint64,
 ) ([]model.CompletedTask, error) {
 
-    unclaimedRewards := make([]model.CompletedTask, 0)
+	unclaimedRewards := make([]model.CompletedTask, 0)
 
-    err := r.DB.NewSelect().
-        Model(&unclaimedRewards).
-        Where("task_id = ?", id).
-        Where("reward_claimed < completion_count").
-        Scan(ctx)
-    if err != nil {
-         return nil, err
-    }
+	err := r.DB.NewSelect().
+		Model(&unclaimedRewards).
+		Where("task_id = ?", id).
+		Where("reward_claimed < completion_count").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-    return unclaimedRewards, nil
+	return unclaimedRewards, nil
 }
 
 func (r *TaskRepository) UpdateCompletedTaskLimits(

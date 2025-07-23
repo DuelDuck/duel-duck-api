@@ -42,12 +42,24 @@ func (h *FAQHandler) RegisterRoutes(app *fiber.App, auth *AuthHandler) {
 //	@Tags			faq
 //	@Accept			json
 //	@Produce		json
-//	@Param			limit	query		int						false	"Number of items per page"		default(10)
-//	@Param			offset	query		int						false	"Page number (starting from 0)"	default(0)
-//	@Success		200		{object}	map[string]interface{}	"List of FAQs with pagination info"
-//	@Failure		400		{object}	apperrors.ErrorPublic	"Invalid request parameters"
-//	@Failure		401		{object}	apperrors.ErrorPublic	"Unauthorized - Invalid or missing claims"
-//	@Failure		500		{object}	apperrors.ErrorPublic	"Internal server error"
+//
+//	@Param			answered					query		boolean												false	"Filter by answered status"
+//	@Param			me							query		boolean												false	"Filter only current user's questions"
+//	@Param			share_id					query		uint												false	"Filter by specific shared FAQ ID"
+//	@Param			opts.pagination.page_size	query		uint64												false	"Number of items per page"		default(10)
+//	@Param			opts.pagination.page_num	query		uint64												false	"Page number (starting from 1)"	default(1)
+//	@Param			opts.order.order_by			query		string												false	"Field to order by"				Enums(time,marks_value)	"Order by (time or marks_value)"
+//	@Param			opts.order.order_type		query		string												false	"Order type"					Enums(desc,asc)			"Order type (asc or desc)"
+//	@Param			opts.filters[0].column		query		string												false	"Filter column name"
+//	@Param			opts.filters[0].operator	query		string												false	"Filter operator"
+//	@Param			opts.filters[0].value		query		string												false	"Filter value"
+//	@Param			opts.filters[0].where_or	query		bool												false	"Filter OR condition"
+//
+//	@Success		200							{object}	object{page_size=int,page_num=int,faqs=[]model.FAQ}	"List of FAQs with pagination info"
+//	@Failure		400							{object}	apperrors.ErrorPublic								"Invalid request parameters"
+//	@Failure		401							{object}	apperrors.ErrorPublic								"Unauthorized - Invalid or missing claims"
+//	@Failure		500							{object}	apperrors.ErrorPublic								"Internal server error"
+//
 //	@Router			/faq [get]
 func (h *FAQHandler) GetAllFAQ(c fiber.Ctx) error {
 	user, err := getFAQUserFromContext(c)
@@ -56,25 +68,19 @@ func (h *FAQHandler) GetAllFAQ(c fiber.Ctx) error {
 	}
 
 	var faqParams model.FAQListQuery
-	if err := c.Bind().Form(&faqParams); err != nil {
-		return err
+	if err := c.Bind().Query(&faqParams); err != nil {
+		return apperrors.BadRequest("failed to parse request", err)
 	}
 
-	err = faqParams.Validate()
-	if err != nil {
-		return err
-	}
-
-	faqs, countTotal, err := h.FAQService.GetAllFAQ(c.Context(), user, &faqParams)
+	faqs, err := h.FAQService.GetAllFAQ(c.Context(), user, &faqParams)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(fiber.Map{
-		"limit":       faqParams.Limit,
-		"offset":      faqParams.Offset,
-		"faqs":        faqs,
-		"count_total": countTotal,
+		"page_size": faqParams.Opts.Pagination.PageSize,
+		"page_num":  faqParams.Opts.Pagination.PageNum,
+		"faqs":      faqs,
 	})
 }
 
@@ -100,11 +106,7 @@ func (h *FAQHandler) CreateFAQ(c fiber.Ctx) error {
 
 	var req model.CreateFAQ
 
-	question := c.FormValue("question")
-	if len(question) == 0 {
-		return apperrors.BadRequest("no question found in the request")
-	}
-	req.Question = question
+	req.Question = c.FormValue("question")
 
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -114,6 +116,10 @@ func (h *FAQHandler) CreateFAQ(c fiber.Ctx) error {
 	files, ok := form.File["images"]
 	if ok {
 		req.Images = files
+	}
+
+	if err := req.Validate(); err != nil {
+		return err
 	}
 
 	faqQuestion, err := h.FAQService.AddFAQQuestion(c.Context(), user, &req)
@@ -132,7 +138,7 @@ func (h *FAQHandler) CreateFAQ(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		model.AddFAQMarkReq		true	"Mark request data"
-//	@Success		200		{object}	map[string]bool			"Success status"
+//	@Success		200		{object}	object{success=bool}	"Success status"
 //	@Failure		400		{object}	apperrors.ErrorPublic	"Invalid request data"
 //	@Failure		401		{object}	apperrors.ErrorPublic	"Unauthorized - Invalid or missing claims"
 //	@Failure		500		{object}	apperrors.ErrorPublic	"Internal server error"
@@ -148,8 +154,7 @@ func (h *FAQHandler) AddFAQMark(c fiber.Ctx) error {
 		return apperrors.BadRequest("invalid request data")
 	}
 
-	err = req.Validate()
-	if err != nil {
+	if err := req.Validate(); err != nil {
 		return err
 	}
 

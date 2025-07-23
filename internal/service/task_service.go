@@ -48,9 +48,9 @@ func (s *TaskService) Complete(
 
 	taskForCompletion, err := s.TaskRepository.
 		WithTx(tx).
-		CompletedByUserID(ctx, completedTask.UserID, completedTask.TaskID)
+		FindCompletedByUserID(ctx, completedTask.UserID, completedTask.TaskID)
 	if err != nil {
-		return apperrors.NotFound("completed task not found by id", err)
+		return apperrors.Internal("failed to find completed task by id", err)
 	}
 
 	if taskForCompletion != nil {
@@ -139,17 +139,22 @@ func (s *TaskService) GetTasksByUserID(
 
 	s.setTaskDeadlinesAndCompletions(tasks)
 
-	userStats, err := s.UserRepository.FindStatsByID(ctx, userID)
-	if err != nil {
-		return nil, nil, apperrors.Internal("failed to get user stats", err)
-	}
+	var userStats *model.UserStats
 
-	if userStats == nil {
-		return nil, nil, apperrors.NotFound("user stats not found")
-	}
+	// Stats only for authorized users
+	if userID != uuid.Nil {
+		userStats, err = s.UserRepository.FindStatsByID(ctx, userID)
+		if err != nil {
+			return nil, nil, apperrors.Internal("failed to get user stats", err)
+		}
 
-	userStats.RewardTheme = model.GetRewardTheme(userStats.Level)
-	userStats.NextLevelXP = s.calculateLevelXP(userStats.Level + 1)
+		if userStats == nil {
+			return nil, nil, apperrors.NotFound("user stats not found")
+		}
+
+		userStats.RewardTheme = model.GetRewardTheme(userStats.Level)
+		userStats.NextLevelXP = s.calculateLevelXP(userStats.Level + 1)
+	}
 
 	return tasks, userStats, nil
 }
@@ -160,9 +165,10 @@ func (s *TaskService) ClaimReward(
 ) (*model.ClaimRewardResp, error) {
 
 	var (
-		task        *model.Task
-		userStats   *model.UserStats
-		userBalance mtype.Balance
+		task          *model.Task
+		completedTask *model.CompletedTask
+		userStats     *model.UserStats
+		userBalance   mtype.Balance
 	)
 
 	task, err := s.TaskRepository.GetTaskByIDAndUserID(ctx, taskForReward.TaskID, taskForReward.UserID)
@@ -170,17 +176,18 @@ func (s *TaskService) ClaimReward(
 		return nil, apperrors.NotFound("task not found by id", err)
 	}
 
-	// Fetch completed task
-	completedTask, err := s.TaskRepository.CompletedByUserID(ctx, taskForReward.UserID, taskForReward.TaskID)
-	if err != nil {
-		return nil, apperrors.Internal("failed to get completed task", err)
-	}
-	if completedTask == nil {
-		return nil, apperrors.NotFound("completed task not found by id")
-	}
-
 	err = s.TransactionManager.WithinTransaction(ctx,
 		func(ctx context.Context, tx bun.Tx) error {
+
+			task, completedTask, err = s.processTaskAutoCompletion(
+				ctx,
+				tx,
+				task,
+				taskForReward,
+			)
+			if err != nil {
+				return err
+			}
 
 			if task.CompletionCount == completedTask.RewardClaimed {
 				return apperrors.BadRequest("no rewards to claim")
@@ -192,7 +199,9 @@ func (s *TaskService) ClaimReward(
 			}
 
 			// Update reward taken counter
-			rewardTaken, err := s.TaskRepository.WithTx(tx).UpdateRewardClaimedByID(ctx, completedTask)
+			rewardTaken, err := s.TaskRepository.
+				WithTx(tx).
+				UpdateRewardClaimedByID(ctx, completedTask)
 			if err != nil {
 				return apperrors.Internal("failed to update reward claimed counter by id", err)
 			}
@@ -260,6 +269,46 @@ func (s *TaskService) UpdateCompletedTaskLimits(ctx context.Context, taskID uint
 	}
 
 	return nil
+}
+
+func (s *TaskService) processTaskAutoCompletion(
+	ctx context.Context,
+	tx bun.Tx,
+	task *model.Task,
+	taskForReward *model.CompletedTask,
+) (*model.Task, *model.CompletedTask, error) {
+	if task.AutoCompletion {
+		err := s.Complete(
+			ctx, tx,
+			model.NewCompletedTask(
+				taskForReward.UserID,
+				taskForReward.TaskID,
+			),
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		task, err = s.TaskRepository.
+			WithTx(tx).
+			GetTaskByIDAndUserID(ctx, taskForReward.TaskID, taskForReward.UserID)
+		if err != nil {
+			return nil, nil, apperrors.NotFound("task not found by id", err)
+		}
+	}
+
+	// Fetch completed task
+	completedTask, err := s.TaskRepository.
+		WithTx(tx).
+		FindCompletedByUserID(ctx, taskForReward.UserID, taskForReward.TaskID)
+	if err != nil {
+		return nil, nil, apperrors.Internal("failed to get completed task", err)
+	}
+	if completedTask == nil {
+		return nil, nil, apperrors.NotFound("completed task not found by id")
+	}
+
+	return task, completedTask, nil
 }
 
 func (s *TaskService) isAbleToAttachEmail(ctx context.Context, userID uuid.UUID, email mtype.Email) (*model.User, error) {

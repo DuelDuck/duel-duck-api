@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"strings"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -246,4 +247,12 @@ func (s *WalletService) DeleteTxNotifications(
 	}
 
 	return s.TxNotificationStorage.Delete(ctx, userID, notificationIDs)
+}
+
+func (s *WalletService) isAccountUninitialized(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return strings.Contains(err.Error(), "could not find account")
 }

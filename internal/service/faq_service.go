@@ -32,8 +32,6 @@ func NewFAQService(
 		mediaUrl = model.MediaUrlProduction
 	} else if c.App.Environment == config.EnvironmentStage {
 		mediaUrl = model.MediaUrlStage
-	} else {
-		mediaUrl = "https://c79c-2a00-1858-102d-82bd-f557-b06a-ec49-f97e.ngrok-free.app/media" // todo: remove
 	}
 
 	return &FAQService{
@@ -49,18 +47,18 @@ func (s *FAQService) GetAllFAQ(
 	ctx context.Context,
 	user *model.FAQUser,
 	faqParams *model.FAQListQuery,
-) ([]model.FAQ, uint64, error) {
+) ([]model.FAQ, error) {
+
+	if err := faqParams.Validate(); err != nil {
+		return nil, err
+	}
+
 	faqs, err := s.FAQRepository.GetAllFAQ(ctx, user, faqParams)
 	if err != nil {
-		return nil, 0, apperrors.Internal("failed to get all faq", err)
+		return nil, apperrors.Internal("failed to get all faq", err)
 	}
 
-	countTotal, err := s.FAQRepository.GetFAQsTotals(ctx, user, faqParams)
-	if err != nil {
-		return nil, 0, apperrors.Internal("failed to get total faq count", err)
-	}
-
-	return faqs, countTotal, nil
+	return faqs, nil
 }
 
 func (s *FAQService) AddFAQQuestion(
@@ -156,7 +154,7 @@ func (s *FAQService) SaveFAQAAnonymousUser(
 	ctx context.Context,
 	user *model.FAQAnonymousUser,
 ) (*model.FAQAnonymousUser, error) {
-	return s.FAQRepository.SaveFAQAAnonymousUser(context.TODO(), user)
+	return s.FAQRepository.SaveFAQAAnonymousUser(context.Background(), user)
 }
 
 func (s *FAQService) stop(_ context.Context) error {

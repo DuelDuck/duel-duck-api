@@ -79,15 +79,16 @@ func NewDuelCron(
 		return nil, err
 	}
 
-	_, err = duelCron.Cron.AddFunc(duelCron.AutoDuelsConf.ShortTerm.RunParams, duelCron.autoCreateDuelsShortTerm)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = duelCron.Cron.AddFunc(duelCron.AutoDuelsConf.LongTerm.RunParams, duelCron.autoCreateDuelsLongTerm)
-	if err != nil {
-		return nil, err
-	}
+	// Temporary turned off
+	//_, err = duelCron.Cron.AddFunc(duelCron.AutoDuelsConf.ShortTerm.RunParams, duelCron.autoCreateDuelsShortTerm)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//_, err = duelCron.Cron.AddFunc(duelCron.AutoDuelsConf.LongTerm.RunParams, duelCron.autoCreateDuelsLongTerm)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return duelCron, nil
 }

@@ -121,28 +121,32 @@ type SendCode struct {
 }
 
 type SignInWithEmail struct {
-	Email         string `json:"email"`
-	Code          string `json:"code"`
-	ReferrerToken string `json:"referrer_token"`
+	Email               string `json:"email"`
+	Code                string `json:"code"`
+	ReferrerToken       string `json:"referrer_token"`
+	AdvertiserLinkToken string `json:"advertiser_link_token"`
 }
 
 type SignInWithGoogle struct {
-	ReferrerToken string `json:"referrer_token"`
+	ReferrerToken       string `json:"referrer_token"`
+	AdvertiserLinkToken string `json:"advertiser_link_token"`
 }
 
 type SignInWithTelegramMiniAppReq struct {
-	ReferrerToken string `json:"referral_token"`
-	InitDataRaw   string `json:"init_data_raw"`
+	ReferrerToken       string `json:"referral_token"`
+	AdvertiserLinkToken string `json:"advertiser_link_token"`
+	InitDataRaw         string `json:"init_data_raw"`
 }
 
 type SignInWithTelegramMiniApp struct {
-	TelegramID    string `json:"telegram_id"`
-	ReferrerToken string `json:"referral_token"`
-	IsPremium     bool   `json:"is_premium"`
-	FirstName     string `json:"first_name"`
-	LastName      string `json:"last_name"`
-	Username      string `json:"username"`
-	InitDataRaw   string `json:"init_data_raw"`
+	TelegramID          string `json:"telegram_id"`
+	ReferrerToken       string `json:"referral_token"`
+	AdvertiserLinkToken string `json:"advertiser_link_token"`
+	IsPremium           bool   `json:"is_premium"`
+	FirstName           string `json:"first_name"`
+	LastName            string `json:"last_name"`
+	Username            string `json:"username"`
+	InitDataRaw         string `json:"init_data_raw"`
 }
 
 func NewSignInWithTelegramMiniApp(

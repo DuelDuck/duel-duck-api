@@ -33,6 +33,7 @@ type UserService struct {
 	TaskService                *TaskService
 	UserRepository             *repository.UserRepository
 	ReferralRepository         *repository.ReferralRepository
+	AdvertiserLinkRepository   *repository.AdvertiserLinkRepository
 	WalletRepository           *repository.WalletRepository
 	WalletTokenRepository      *repository.WalletTokenRepository
 	privateKeyRepository       *cypher.PrivateKeyRepository
@@ -46,6 +47,7 @@ func NewUserService(
 	taskService *TaskService,
 	userRepository *repository.UserRepository,
 	referralRepository *repository.ReferralRepository,
+	advertiserLinkRepository *repository.AdvertiserLinkRepository,
 	walletRepository *repository.WalletRepository,
 	walletTokenRepository *repository.WalletTokenRepository,
 	privateKeyRepository *cypher.PrivateKeyRepository,
@@ -56,6 +58,7 @@ func NewUserService(
 		TaskService:                taskService,
 		UserRepository:             userRepository,
 		ReferralRepository:         referralRepository,
+		AdvertiserLinkRepository:   advertiserLinkRepository,
 		WalletRepository:           walletRepository,
 		WalletTokenRepository:      walletTokenRepository,
 		privateKeyRepository:       privateKeyRepository,
@@ -68,19 +71,21 @@ func (s *UserService) CreateWithEmail(
 	ctx context.Context,
 	email mtype.Email,
 	referrerToken string,
+	advertiserLinkToken string,
 ) (*model.User, error) {
 	user, err := s.createUserWithEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.createUser(ctx, user, referrerToken)
+	return s.createUser(ctx, user, referrerToken, advertiserLinkToken)
 }
 
 func (s *UserService) createUser(
 	ctx context.Context,
 	user *model.User,
 	referrerToken string,
+	advertiserLinkToken string,
 ) (*model.User, error) {
 	isReferral := false
 	if referrerToken != "" {
@@ -130,6 +135,28 @@ func (s *UserService) createUser(
 			err = s.ReferralRepository.WithTx(tx).Create(ctx, referrerToken, user.ID, s.referrerInvitationRewardDP)
 			if err != nil {
 				return apperrors.Internal("failed to register user as a referral", err)
+			}
+		}
+
+		// Register user via advertiser link
+		if len(advertiserLinkToken) > 0 {
+			link, err := s.AdvertiserLinkRepository.WithTx(tx).FindAdvertiserLinkByToken(ctx, advertiserLinkToken)
+			if err != nil {
+				return apperrors.Internal("failed to find advertiser link", err)
+			}
+			if link == nil {
+				return apperrors.NotFound("advertiser link not found")
+			}
+
+			err = s.AdvertiserLinkRepository.WithTx(tx).
+				AttachUserToAdvertiserLink(
+					ctx, &model.AdvertiserLinkReferrals{
+						LinkID: link.ID,
+						UserID: user.ID,
+					},
+				)
+			if err != nil {
+				return apperrors.Internal("failed to register user via advertiser link", err)
 			}
 		}
 
@@ -294,6 +321,7 @@ func (s *UserService) SignInWithEmail(
 	ctx context.Context,
 	email mtype.Email,
 	referrerToken string,
+	advertiserLinkToken string,
 ) (*model.User, error) {
 	user, err := s.FindByEmail(ctx, email)
 	if err != nil {
@@ -301,7 +329,7 @@ func (s *UserService) SignInWithEmail(
 	}
 
 	if user == nil {
-		user, err = s.CreateWithEmail(ctx, email, referrerToken)
+		user, err = s.CreateWithEmail(ctx, email, referrerToken, advertiserLinkToken)
 		if err != nil {
 			return nil, err
 		}
@@ -331,7 +359,7 @@ func (s *UserService) CreateWithTelegram(
 		return nil, err
 	}
 
-	return s.createUser(ctx, user, authTg.ReferrerToken)
+	return s.createUser(ctx, user, authTg.ReferrerToken, authTg.AdvertiserLinkToken)
 }
 
 func (s *UserService) ReferralStatsByID(

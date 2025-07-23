@@ -19,6 +19,7 @@ func Module() fx.Option {
 		),
 		fx.Provide(
 			NewAuthService,
+			NewAdvertiserLinkService,
 			NewUserService,
 			NewJWTService,
 			NewDuelService,

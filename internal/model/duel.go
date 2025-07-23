@@ -403,14 +403,19 @@ func (p DuelParams) CalculateCryptoCommissionReward() uint64 {
 	return uint64(percentValue / 2)
 }
 
+type JoinSolanaRoomResp struct {
+	TxHash         string           `json:"tx_hash"`
+	AutoswapResult []AutoswapResult `json:"autoswap_result"`
+}
+
 type CreateCryptoDuelResp struct {
-	Duel   *Duel  `json:"duel"`
-	TxHash string `json:"tx_hash"`
+	Duel   *Duel               `json:"duel"`
+	Result *JoinSolanaRoomResp `json:"result"`
 }
 
 type JoinCryptoDuelResp struct {
-	Player *Player `json:"duel"`
-	TxHash string  `json:"tx_hash"`
+	Player *Player             `json:"player"`
+	Result *JoinSolanaRoomResp `json:"result"`
 }
 
 func AutoCancelReq(duel *Duel) *DuelCancelReq {

@@ -58,7 +58,7 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 	duel *model.Duel,
 	user *model.User,
 	answer uint8,
-) (string, error) {
+) (*model.JoinSolanaRoomResp, error) {
 	duelPrice := duel.DuelPrice * model.USDCPriceMultiplier
 
 	reqBody := map[string]interface{}{
@@ -72,37 +72,38 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 
 	txInit, err := s.GetTxFromContractService(reqBody, "init")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	userPrivateKeyBase58, err := s.privateKeyRepository.GetPrivateKeyBase58(ctx, user.ID)
 	if err != nil {
-		return "", apperrors.Internal("failed to find users private key", err)
+		return nil, apperrors.Internal("failed to find users private key", err)
 	}
 
 	userPrivateKey, err := solana.PrivateKeyFromBase58(userPrivateKeyBase58)
 	if err != nil {
-		return "", apperrors.Internal("failed to parse user's private key", err)
+		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
 
 	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
 	if err != nil {
-		return "", apperrors.Internal("failed to get user associated token address", err)
+		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
 	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
-		return "", apperrors.Internal("failed to get user associated token balance", err)
+		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
 
+	var swapRes []model.AutoswapResult
 	var autoswapNeeded bool
 	if balance < duelPrice {
 		autoswapNeeded = true
 		requiredAmount := duelPrice - balance
 
-		err := s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
+		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
@@ -115,12 +116,12 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 
 	txJoin, err := s.GetTxFromContractService(reqBody, "join")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	instructions, err := GetTxInstructions(txInit, txJoin)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	tx, err := s.NewTransactionForSimulation(
@@ -129,27 +130,23 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if autoswapNeeded {
-		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 10*time.Second, 1*time.Second)
+		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		if !ok {
-			return "", apperrors.BadRequest("not enough token balance (timeout)")
+			return nil, apperrors.BadRequest("not enough token balance (timeout)")
 		}
-
-		// tmp solution for mvp.
-		// Sleep lets solana node have enough time to get user's updated balance after token swaps
-		time.Sleep(60 * time.Second)
 	}
 
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	computeUnits = uint32(float64(computeUnits) * CUExtraCapacityCoefficient)
@@ -157,14 +154,14 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		SetMicroLamports(s.PriorityTracker.GetMediumPriorityMicroLamports()).
 		ValidateAndBuild()
 	if err != nil {
-		return "", apperrors.Internal("failed to set transaction compute unit price", err)
+		return nil, apperrors.Internal("failed to set transaction compute unit price", err)
 	}
 
 	cuLimitInstruction, err := computebudget.NewSetComputeUnitLimitInstructionBuilder().
 		SetUnits(computeUnits).
 		ValidateAndBuild()
 	if err != nil {
-		return "", apperrors.Internal("failed to set transaction compute unit limit", err)
+		return nil, apperrors.Internal("failed to set transaction compute unit limit", err)
 	}
 
 	instructions = append([]solana.Instruction{cuPriceInstruction, cuLimitInstruction}, instructions...)
@@ -175,17 +172,20 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
-		return "", apperrors.ServiceUnavailable("failed to generate a transaction", err)
+		return nil, apperrors.ServiceUnavailable("failed to generate a transaction", err)
 	}
 
 	txHash, err := s.sendTxWithTracker(ctx,
 		tx,
 		txTwoSignersPrivateKeyGetter(s.adminPrivateKey, userPrivateKey))
 	if err != nil {
-		return "", apperrors.ServiceUnavailable("failed to send transaction", err)
+		return nil, apperrors.ServiceUnavailable("failed to send transaction", err)
 	}
 
-	return txHash.String(), nil
+	return &model.JoinSolanaRoomResp{
+		TxHash:         txHash.String(),
+		AutoswapResult: swapRes,
+	}, nil
 }
 
 func (s *WalletService) JoinSolanaRoom(
@@ -193,7 +193,7 @@ func (s *WalletService) JoinSolanaRoom(
 	duel *model.Duel,
 	user *model.User,
 	answer uint8,
-) (string, error) {
+) (*model.JoinSolanaRoomResp, error) {
 	multiplier := (duel.PlayersCount)/10 + 1
 	if multiplier == (duel.PlayersCount-1)/10+1 {
 		return s.joinSolanaRoom(ctx, duel, user, answer)
@@ -201,34 +201,42 @@ func (s *WalletService) JoinSolanaRoom(
 
 	userPrivateKeyBase58, err := s.privateKeyRepository.GetPrivateKeyBase58(ctx, user.ID)
 	if err != nil {
-		return "", apperrors.Internal("failed to find users private key", err)
+		return nil, apperrors.Internal("failed to find users private key", err)
 	}
 
 	userPrivateKey, err := solana.PrivateKeyFromBase58(userPrivateKeyBase58)
 	if err != nil {
-		return "", apperrors.Internal("failed to parse user's private key", err)
+		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
 
 	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
 	if err != nil {
-		return "", apperrors.Internal("failed to get user associated token address", err)
+		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	hasEnough, err := s.HasEnoughTokenBalance(
-		ctx,
-		userTokenAccount,
-		duel.DuelPrice*model.USDCPriceMultiplier)
+	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
-		return "", err
+		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
-	if !hasEnough {
-		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+
+	duelPrice := duel.DuelPrice * model.USDCPriceMultiplier
+
+	var swapRes []model.AutoswapResult
+	var autoswapNeeded bool
+	if balance < duelPrice {
+		autoswapNeeded = true
+		requiredAmount := duelPrice - balance
+
+		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	reqBody := map[string]any{"pda_nr": duel.RoomNumber}
 	txReallocate, err := s.GetTxFromContractService(reqBody, "reallocate")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	reqBody = map[string]any{
@@ -239,12 +247,12 @@ func (s *WalletService) JoinSolanaRoom(
 	}
 	txJoin, err := s.GetTxFromContractService(reqBody, "join")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	instructions, err := GetTxInstructions(txReallocate, txJoin)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	tx, err := s.NewTransactionForSimulation(
@@ -253,12 +261,23 @@ func (s *WalletService) JoinSolanaRoom(
 		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
-		return "", apperrors.Internal("failed to create transaction", err)
+		return nil, apperrors.Internal("failed to create transaction", err)
+	}
+
+	if autoswapNeeded {
+		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, apperrors.BadRequest("not enough token balance (timeout)")
+		}
 	}
 
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	computeUnits = uint32(float64(computeUnits) * CUExtraCapacityCoefficient)
@@ -266,14 +285,14 @@ func (s *WalletService) JoinSolanaRoom(
 		SetMicroLamports(s.PriorityTracker.GetMediumPriorityMicroLamports()).
 		ValidateAndBuild()
 	if err != nil {
-		return "", apperrors.Internal("failed to set transaction compute unit price", err)
+		return nil, apperrors.Internal("failed to set transaction compute unit price", err)
 	}
 
 	cuLimitInstruction, err := computebudget.NewSetComputeUnitLimitInstructionBuilder().
 		SetUnits(computeUnits).
 		ValidateAndBuild()
 	if err != nil {
-		return "", apperrors.Internal("failed to set transaction compute unit limit", err)
+		return nil, apperrors.Internal("failed to set transaction compute unit limit", err)
 	}
 
 	instructions = append([]solana.Instruction{cuPriceInstruction, cuLimitInstruction}, instructions...)
@@ -284,41 +303,61 @@ func (s *WalletService) JoinSolanaRoom(
 		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
-		return "", apperrors.Internal("failed to create transaction", err)
+		return nil, apperrors.Internal("failed to create transaction", err)
 	}
 
 	txHash, err := s.sendTxWithTracker(ctx,
 		tx,
 		txTwoSignersPrivateKeyGetter(s.adminPrivateKey, userPrivateKey))
 	if err != nil {
-		return "", apperrors.ServiceUnavailable("failed to send transaction", err)
+		return nil, apperrors.ServiceUnavailable("failed to send transaction", err)
 	}
 
-	return txHash.String(), nil
+	return &model.JoinSolanaRoomResp{
+		TxHash:         txHash.String(),
+		AutoswapResult: swapRes,
+	}, nil
 }
 
-func (s *WalletService) joinSolanaRoom(ctx context.Context, duel *model.Duel, user *model.User, answer uint8) (string, error) {
+func (s *WalletService) joinSolanaRoom(
+	ctx context.Context,
+	duel *model.Duel,
+	user *model.User,
+	answer uint8,
+) (*model.JoinSolanaRoomResp, error) {
 	userPrivateKeyBase58, err := s.privateKeyRepository.GetPrivateKeyBase58(ctx, user.ID)
 	if err != nil {
-		return "", apperrors.Internal("failed to find users private key", err)
+		return nil, apperrors.Internal("failed to find users private key", err)
 	}
 
 	userPrivateKey, err := solana.PrivateKeyFromBase58(userPrivateKeyBase58)
 	if err != nil {
-		return "", apperrors.Internal("failed to parse user's private key", err)
+		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
 
 	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
 	if err != nil {
-		return "", apperrors.Internal("failed to get user associated token address", err)
+		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	hasEnough, err := s.HasEnoughTokenBalance(ctx, userTokenAccount, duel.DuelPrice)
+	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
-		return "", err
+		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
-	if !hasEnough {
-		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+
+	duelPrice := duel.DuelPrice * model.USDCPriceMultiplier
+
+	var swapRes []model.AutoswapResult
+	var autoswapNeeded bool
+	if balance < duelPrice {
+		autoswapNeeded = true
+		requiredAmount := duelPrice - balance
+
+		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	multiplier := (duel.PlayersCount)/10 + 1
@@ -329,27 +368,79 @@ func (s *WalletService) joinSolanaRoom(ctx context.Context, duel *model.Duel, us
 		"pda_nr":     duel.RoomNumber,
 		"payer":      userPrivateKey.PublicKey().String(),
 	}
-	instructions, err := s.GetInstructionsFromContractService(ctx, reqBody, "join", userPrivateKey)
+
+	txJoin, err := s.GetTxFromContractService(reqBody, "join")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	tx, err := solana.NewTransaction(
+	instructions, err := GetTxInstructions(txJoin)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := s.NewTransactionForSimulation(
 		instructions,
-		solana.Hash{},
+		txTwoSignersPrivateKeyGetter(s.adminPrivateKey, userPrivateKey),
+		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
-		return "", apperrors.Internal("failed to create transaction", err)
+		return nil, apperrors.Internal("failed to create transaction", err)
+	}
+
+	if autoswapNeeded {
+		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, apperrors.BadRequest("not enough token balance (timeout)")
+		}
+	}
+
+	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	computeUnits = uint32(float64(computeUnits) * CUExtraCapacityCoefficient)
+	cuPriceInstruction, err := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(s.PriorityTracker.GetMediumPriorityMicroLamports()).
+		ValidateAndBuild()
+	if err != nil {
+		return nil, apperrors.Internal("failed to set transaction compute unit price", err)
+	}
+
+	cuLimitInstruction, err := computebudget.NewSetComputeUnitLimitInstructionBuilder().
+		SetUnits(computeUnits).
+		ValidateAndBuild()
+	if err != nil {
+		return nil, apperrors.Internal("failed to set transaction compute unit limit", err)
+	}
+
+	instructions = append([]solana.Instruction{cuPriceInstruction, cuLimitInstruction}, instructions...)
+
+	tx, err = solana.NewTransaction(
+		instructions,
+		solana.Hash{},
+		solana.TransactionPayer(s.adminPrivateKey.PublicKey()),
+		solana.TransactionPayer(userPrivateKey.PublicKey()))
+	if err != nil {
+		return nil, apperrors.Internal("failed to create transaction", err)
 	}
 
 	txHash, err := s.sendTxWithTracker(ctx,
 		tx,
-		txSignerPrivateKeyGetter(userPrivateKey))
+		txTwoSignersPrivateKeyGetter(s.adminPrivateKey, userPrivateKey))
 	if err != nil {
-		return "", apperrors.ServiceUnavailable("failed to send transaction", err)
+		return nil, apperrors.ServiceUnavailable("failed to send transaction", err)
 	}
 
-	return txHash.String(), nil
+	return &model.JoinSolanaRoomResp{
+		TxHash:         txHash.String(),
+		AutoswapResult: swapRes,
+	}, nil
 }
 
 func (s *WalletService) RewardDuelWinners(

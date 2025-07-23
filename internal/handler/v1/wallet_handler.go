@@ -74,7 +74,7 @@ func (h *WalletHandler) ShowWallet(c fiber.Ctx) error {
 // Transfer godoc
 //
 //	@Summary		Transfer tokens to another user
-//	@Description	Transfers USDC from the authenticated user's wallet to a recipient's wallet address.
+//	@Description	Transfers tokens from the authenticated user's wallet to a recipient's wallet address.
 //	@Tags			wallet
 //	@Accept			json
 //	@Produce		json
@@ -99,7 +99,7 @@ func (h *WalletHandler) Transfer(c fiber.Ctx) error {
 		return apperrors.Unauthorized("claims not found")
 	}
 
-	txHash, err := h.WalletService.Transfer(c.Context(), claims.UserID, req.Recipient, req.Amount)
+	txHash, err := h.WalletService.Transfer(c.Context(), claims.UserID, req.Recipient, req.Amount, req.Mint)
 	if err != nil {
 		return err
 	}
@@ -117,16 +117,16 @@ func (h *WalletHandler) Transfer(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			Authorization	header		string					true	"Authorization Bearer token"
-//	@Param			request			body		model.TransferReq		true	"Transfer request payload"
-//	@Success		200				{object}	nil						"Duck Points transferred successfully"
-//	@Failure		400				{object}	apperrors.ErrorPublic	"Invalid request data or validation errors"
-//	@Failure		401				{object}	apperrors.ErrorPublic	"Authentication required or invalid credentials"
-//	@Failure		404				{object}	apperrors.ErrorPublic	"Recipient not found"
-//	@Failure		500				{object}	apperrors.ErrorPublic	"Internal server error"
+//	@Param			Authorization	header		string						true	"Authorization Bearer token"
+//	@Param			request			body		model.TransferDuckPointsReq	true	"Transfer request payload"
+//	@Success		200				{object}	nil							"Duck Points transferred successfully"
+//	@Failure		400				{object}	apperrors.ErrorPublic		"Invalid request data or validation errors"
+//	@Failure		401				{object}	apperrors.ErrorPublic		"Authentication required or invalid credentials"
+//	@Failure		404				{object}	apperrors.ErrorPublic		"Recipient not found"
+//	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error"
 //	@Router			/wallet/transfer-duck-points [post]
 func (h *WalletHandler) TransferDuckPoints(c fiber.Ctx) error {
-	var req model.TransferReq
+	var req model.TransferDuckPointsReq
 	if err := c.Bind().JSON(&req); err != nil {
 		return apperrors.BadRequest("invalid request data")
 	}
@@ -366,6 +366,8 @@ func (h *WalletHandler) RemoveTokenFromUserWallet(c fiber.Ctx) error {
 	return nil
 }
 
+// GetAllTxNotifications godoc
+//
 // @Summary		Get all swap notifications for the authenticated user
 // @Description	Retrieves all swap notifications associated with the authenticated user's wallet.
 // @Tags			wallet
@@ -376,7 +378,7 @@ func (h *WalletHandler) RemoveTokenFromUserWallet(c fiber.Ctx) error {
 // @Success		200				{array}		model.TxNotification	"List of transaction notifications"
 // @Failure		401				{object}	apperrors.ErrorPublic	"Authentication required or invalid credentials"
 // @Failure		500				{object}	apperrors.ErrorPublic	"Internal server error"
-// @Router			/wallet/tx-notifications [get]
+// @Router			/wallet/notifications [get]
 func (h *WalletHandler) GetAllTxNotifications(c fiber.Ctx) error {
 	claims, ok := c.Locals("claims").(auth.TokenClaims)
 	if !ok {
@@ -391,6 +393,8 @@ func (h *WalletHandler) GetAllTxNotifications(c fiber.Ctx) error {
 	return c.JSON(notifications)
 }
 
+// DeleteTxNotifications
+//
 // @Summary		Delete transaction notifications
 // @Description	Deletes one or more transaction notifications for the authenticated user by their notification IDs.
 // @Tags			wallet
@@ -403,7 +407,7 @@ func (h *WalletHandler) GetAllTxNotifications(c fiber.Ctx) error {
 // @Failure		400				{object}	apperrors.ErrorPublic			"Invalid request data or missing notification IDs"
 // @Failure		401				{object}	apperrors.ErrorPublic			"Authentication required or invalid credentials"
 // @Failure		500				{object}	apperrors.ErrorPublic			"Internal server error"
-// @Router			/wallet/tx-notifications [delete]
+// @Router			/wallet/notifications [delete]
 func (h *WalletHandler) DeleteTxNotifications(c fiber.Ctx) error {
 	var req model.TxNotificationDeleteReq
 	if err := c.Bind().JSON(&req); err != nil {

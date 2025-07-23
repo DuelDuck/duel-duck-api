@@ -36,6 +36,7 @@ type Task struct {
 	CompletionLimit       uint32            `bun:"type:int" json:"completion_limit"`
 	CompletionLimitPeriod uint32            `bun:"type:int" json:"completion_limit_period"`
 	Deadline              *uint64           `bun:"-" json:"deadline"`
+	AutoCompletion        bool              `bun:",notnull,default:false" json:"auto_completion"`
 	Link                  string            `bun:"type:varchar(255)" json:"link"`
 	CreatedAt             time.Time         `bun:"default:current_timestamp" json:"created_at"`
 }

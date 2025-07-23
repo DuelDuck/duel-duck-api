@@ -9,6 +9,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/google/uuid"
+	"gitlab.com/duel-duck/duel-duck-api/internal/client/jupiter"
 	"gitlab.com/duel-duck/duel-duck-api/internal/model"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	"go.uber.org/zap"
@@ -35,12 +36,12 @@ func intersectTokenAccountsWithMints(accounts []model.TokenAccount, swappable []
 	return result
 }
 
-// processSolToken handles special logic for SOL token:
+// getAvailableSolSwapAmount handles special logic for SOL token:
 // - If SOL value is less than $1, returns nil (not swappable)
 // - If SOL value is >= $1, adjusts amount to leave at least $1 worth of SOL
-func (s *WalletService) processSolToken(tokenAcc model.TokenAccount, price float64) *model.TokenAccount {
+func (s *WalletService) getAvailableSolSwapAmount(tokenAcc model.TokenAccount, price float64) (int64, bool) {
 	if tokenAcc.TokenAddress != solana.SolMint.String() {
-		return &tokenAcc
+		return 0, false
 	}
 
 	tokenRawAmount := float64(tokenAcc.Amount)
@@ -53,7 +54,7 @@ func (s *WalletService) processSolToken(tokenAcc model.TokenAccount, price float
 
 	if totalSolUsdRaw < oneUSDCRaw {
 		// SOL value less than $1, not swappable
-		return nil
+		return 0, false
 	}
 
 	// Calculate $1 worth of SOL in raw units
@@ -62,47 +63,31 @@ func (s *WalletService) processSolToken(tokenAcc model.TokenAccount, price float
 	// Adjust amount to leave at least $1 worth of SOL
 	swappableAmount := tokenRawAmount - oneUsdInSol
 	if swappableAmount <= 0 {
-		return nil
+		return 0, false
 	}
 
-	// Create new token account with adjusted amount
-	adjustedToken := tokenAcc
-	adjustedToken.Amount = int64(swappableAmount)
-	return &adjustedToken
+	return int64(swappableAmount), true
 }
 
-// Sort tokens by total USD value (amount * price) desc
-type tokenWithValue struct {
-	Token    model.TokenAccount
-	USDValue uint64
-}
-
-func (s *WalletService) AutoswapUSDC(
+func (s *WalletService) findATAsAvailableForSwap(
 	ctx context.Context,
 	userID uuid.UUID,
-	privateKey solana.PrivateKey,
-	requiredAmount uint64,
-) error {
-	if requiredAmount <= 0 {
-		return nil
-	}
-
+	publicKey solana.PublicKey,
+) ([]model.TokenAccount, error) {
 	swappable, err := s.WalletTokenRepository.MintsWithAutoswap(ctx, userID)
 	if err != nil {
-		return apperrors.Internal("failed to get user auto—swappable tokens", err)
+		return nil, apperrors.Internal("failed to get user auto—swappable tokens", err)
 	}
 
 	if len(swappable) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	solSwappable := IsAllowedToSwapSol(swappable)
-
-	publicKey := privateKey.PublicKey()
 	req := &model.GetTokenAccountsReq{HideZero: true}
 	tokens, err := s.GetTokenAccounts(ctx, publicKey.String(), req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Find intersection of swappable tokens and user's tokens allowed to be swapped,
@@ -111,98 +96,61 @@ func (s *WalletService) AutoswapUSDC(
 	if solSwappable {
 		intersection, err = s.addSolToken(ctx, publicKey, intersection)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if len(intersection) == 0 {
-		return nil
+		return nil, nil
+	}
+
+	return intersection, nil
+}
+
+func (s *WalletService) AutoswapUSDC(
+	ctx context.Context,
+	userID uuid.UUID,
+	privateKey solana.PrivateKey,
+	requiredAmount uint64,
+) ([]model.AutoswapResult, error) {
+	if requiredAmount <= 0 {
+		return nil, nil
+	}
+
+	publicKey := privateKey.PublicKey()
+	swappable, err := s.findATAsAvailableForSwap(ctx, userID, publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(swappable) == 0 {
+		return nil, apperrors.BadRequest("insufficient funds: no tokens available for autoswap")
 	}
 
 	// Prepare list of token addresses for price lookup
-	tokenAddresses := make([]string, 0, len(intersection))
-	for _, t := range intersection {
+	tokenAddresses := make([]string, 0, len(swappable))
+	for _, t := range swappable {
 		tokenAddresses = append(tokenAddresses, t.TokenAddress)
 	}
 
 	prices, err := s.Jupiter.Price(ctx, tokenAddresses...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	tokensWithValue := make([]tokenWithValue, 0, len(intersection))
-	for _, tokenAcc := range intersection {
-		price, ok := prices[tokenAcc.TokenAddress]
-		if !ok || price.UsdPrice <= 0 || tokenAcc.TokenAddress == USDCMintAddress.String() {
-			continue
-		}
-
-		// Process SOL token with special logic
-		if tokenAcc.TokenAddress == solana.SolMint.String() {
-			processedToken := s.processSolToken(tokenAcc, price.UsdPrice)
-			if processedToken == nil {
-				continue // SOL not swappable (value < $1)
-			}
-			tokenAcc = *processedToken
-		}
-
-		tokenRawAmount := float64(tokenAcc.Amount)
-		tokenDecimals := tokenAcc.TokenDecimals
-		usdcPriceRaw := price.UsdPrice * TokenMultiplierByDecimals(USDCMintDecimals)
-		usdValue := usdcPriceRaw * (tokenRawAmount / TokenMultiplierByDecimals(tokenDecimals))
-
-		tokensWithValue = append(tokensWithValue, tokenWithValue{
-			Token:    tokenAcc,
-			USDValue: uint64(usdValue),
-		})
-	}
-
-	// Sort descending by USDValue
-	sort.Slice(tokensWithValue, func(i, j int) bool {
-		return tokensWithValue[i].USDValue > tokensWithValue[j].USDValue
-	})
+	tokensWithValue := s.getSwappableATAsOrderByUSDValue(swappable, prices)
 
 	// We want to swap enough tokens to get (requiredAmount * 1.1) USDC (raw, 6 decimals)
 	targetUSDC := uint64(float64(requiredAmount) * 1.1)
-	usdcAccumulated := uint64(0)
-	tokensToSwap := make([]model.AutoswapToken, 0, len(tokensWithValue))
 
-	for _, twv := range tokensWithValue {
-		tokenAcc := twv.Token
-		price := prices[tokenAcc.TokenAddress]
-		tokenAmount := float64(tokenAcc.Amount)
-		tokenDecimals := tokenAcc.TokenDecimals
-		usdcDecimalsMultiplier := TokenMultiplierByDecimals(USDCMintDecimals)
-		usdcValue := tokenAmount * price.UsdPrice * usdcDecimalsMultiplier / TokenMultiplierByDecimals(tokenDecimals)
-
-		usdcNeeded := float64(targetUSDC - usdcAccumulated)
-		if usdcAccumulated >= targetUSDC {
-			break
-		}
-
-		if usdcValue >= usdcNeeded {
-			amountToSwap := usdcNeeded * TokenMultiplierByDecimals(tokenDecimals) / (price.UsdPrice * usdcDecimalsMultiplier)
-			tokensToSwap = append(tokensToSwap, model.AutoswapToken{
-				Mint:         tokenAcc.TokenAddress,
-				AmountToSwap: uint64(amountToSwap),
-			})
-			usdcAccumulated += uint64(usdcNeeded)
-			break
-		} else {
-			tokensToSwap = append(tokensToSwap, model.AutoswapToken{
-				Mint:         tokenAcc.TokenAddress,
-				AmountToSwap: uint64(tokenAcc.Amount),
-			})
-			usdcAccumulated += uint64(usdcValue)
-		}
+	tokensToSwap, err := s.prepareTokensForSwap(tokensWithValue, targetUSDC)
+	if err != nil {
+		return nil, err
 	}
 
-	if targetUSDC > usdcAccumulated {
-		return apperrors.PaymentRequired("not enough tokens for usdc autoswap")
-	}
-
-	for _, t := range tokensToSwap {
-		err = s.TxNotificationStorage.Save(ctx, userID, model.NewTxNotificationStatusPending())
+	for i, t := range tokensToSwap {
+		notification := model.NewTxNotificationStatusPending()
+		err = s.TxNotificationStorage.Save(ctx, userID, notification)
 		if err != nil {
 			zap.L().Error("failed to save user pending tx notification", zap.Error(err))
 		}
@@ -212,28 +160,29 @@ func (s *WalletService) AutoswapUSDC(
 			privateKey,
 			t.Mint,
 			USDCMintAddress.String(),
-			t.AmountToSwap,
+			t.SwapAmount,
 			int64(s.SwapCommissionCoefficient*CoefficientToBPSRelation),
 		)
 		if err != nil {
 			zap.L().Error("failed usdc autoswap", zap.Error(err))
-			err = s.TxNotificationStorage.Save(ctx, userID, model.NewTxNotificationStatusFailed())
+
+			err = s.TxNotificationStorage.SetStatusFailed(ctx, userID, notification.ID)
 			if err != nil {
 				zap.L().Error("failed to save user success tx notification", zap.Error(err))
 			}
 
-			return err
+			return nil, err
 		}
 
-		err = s.TxNotificationStorage.Save(ctx, userID, model.NewTxNotificationStatusSuccess())
+		tokensToSwap[i].TxHash = txHash
+
+		err = s.TxNotificationStorage.SetStatusSuccess(ctx, userID, notification.ID)
 		if err != nil {
 			zap.L().Error("failed to save user success tx notification", zap.Error(err))
 		}
-
-		zap.L().Info("txHash", zap.String("txHash", txHash))
 	}
 
-	return nil
+	return tokensToSwap, nil
 }
 
 func IsAllowedToSwapSol(mints []string) bool {
@@ -275,7 +224,7 @@ func (s *WalletService) waitForEnoughTokenBalance(
 	defer cancel()
 
 	for {
-		hasEnough, err := s.HasEnoughTokenBalance(ctx, ata, requiredAmount)
+		hasEnough, err := s.HasEnoughTokenBalanceFinalized(ctx, ata, requiredAmount)
 		if err != nil {
 			return false, err
 		}
@@ -289,4 +238,80 @@ func (s *WalletService) waitForEnoughTokenBalance(
 		case <-time.After(pollInterval):
 		}
 	}
+}
+
+func (s *WalletService) getSwappableATAsOrderByUSDValue(swappable []model.TokenAccount, prices map[string]jupiter.GetPriceResp) []model.TokenWithValue {
+	tokensWithValue := make([]model.TokenWithValue, 0, len(swappable))
+	for _, tokenAcc := range swappable {
+		price, ok := prices[tokenAcc.TokenAddress]
+		if !ok || price.UsdPrice <= 0 || tokenAcc.TokenAddress == USDCMintAddress.String() {
+			continue
+		}
+
+		availableSwapAmount := tokenAcc.Amount
+
+		if tokenAcc.TokenAddress == solana.SolMint.String() {
+			availableSwapAmount, ok = s.getAvailableSolSwapAmount(tokenAcc, price.UsdPrice)
+			if !ok {
+				continue
+			}
+		}
+
+		tokenRawAmount := float64(availableSwapAmount)
+		usdcPriceRaw := price.UsdPrice * TokenMultiplierByDecimals(USDCMintDecimals)
+		usdValue := usdcPriceRaw * (tokenRawAmount / TokenMultiplierByDecimals(tokenAcc.TokenDecimals))
+
+		tokenWithValue := model.TokenWithValue{
+			TokenAccount:        tokenAcc.TokenAccount,
+			TokenAddress:        tokenAcc.TokenAddress,
+			Amount:              tokenAcc.Amount,
+			AvailableSwapAmount: availableSwapAmount,
+			TokenDecimals:       tokenAcc.TokenDecimals,
+			USDPrice:            price.UsdPrice,
+			USDValue:            uint64(usdValue),
+		}
+		tokensWithValue = append(tokensWithValue, tokenWithValue)
+	}
+
+	sort.Slice(tokensWithValue, func(i, j int) bool {
+		return tokensWithValue[i].USDValue > tokensWithValue[j].USDValue
+	})
+
+	return tokensWithValue
+}
+
+func (s *WalletService) prepareTokensForSwap(tokensWithValue []model.TokenWithValue, targetUSDC uint64) ([]model.AutoswapResult, error) {
+	usdcAccumulated := uint64(0)
+	tokensToSwap := make([]model.AutoswapResult, 0, len(tokensWithValue))
+
+	for _, tokenAcc := range tokensWithValue {
+		usdPrice := tokenAcc.USDPrice
+		tokenAmount := float64(tokenAcc.Amount)
+		tokenDecimals := tokenAcc.TokenDecimals
+		usdcDecimalsMultiplier := TokenMultiplierByDecimals(USDCMintDecimals)
+		usdcValue := tokenAmount * usdPrice * usdcDecimalsMultiplier / TokenMultiplierByDecimals(tokenDecimals)
+
+		usdcNeeded := float64(targetUSDC - usdcAccumulated)
+		if usdcAccumulated >= targetUSDC {
+			break
+		}
+
+		if usdcValue >= usdcNeeded {
+			amountToSwap := usdcNeeded * TokenMultiplierByDecimals(tokenDecimals) / (usdPrice * usdcDecimalsMultiplier)
+			autoswapResult := model.AutoswapResultFromTokenWithValue(tokenAcc, uint64(amountToSwap))
+			tokensToSwap = append(tokensToSwap, autoswapResult)
+			usdcAccumulated += uint64(usdcNeeded)
+			break
+		} else {
+			autoswapResult := model.AutoswapResultFromTokenWithValue(tokenAcc, uint64(tokenAcc.Amount))
+			tokensToSwap = append(tokensToSwap, autoswapResult)
+			usdcAccumulated += uint64(usdcValue)
+		}
+	}
+
+	if targetUSDC > usdcAccumulated {
+		return nil, apperrors.PaymentRequired("not enough tokens for usdc autoswap")
+	}
+
+	return tokensToSwap, nil
 }

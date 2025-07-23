@@ -193,7 +193,7 @@ func (h *AuthHandler) SignInWithEmail(c fiber.Ctx) error {
 		return apperrors.Unauthorized("invalid code")
 	}
 
-	user, err := h.UserService.SignInWithEmail(c.Context(), email, req.ReferrerToken)
+	user, err := h.UserService.SignInWithEmail(c.Context(), email, req.ReferrerToken, req.AdvertiserLinkToken)
 	if err != nil {
 		return apperrors.NotFound("user with email not found", err)
 	}
@@ -228,6 +228,17 @@ func (h *AuthHandler) AuthMiddleware(c fiber.Ctx) error {
 	}
 
 	c.Locals("claims", *claims)
+
+	return c.Next()
+}
+
+func (h *AuthHandler) OptionalAuthMiddleware(c fiber.Ctx) error {
+	token := c.Get("Authorization")
+
+	claims, err := h.JWTService.ParseToken(token)
+	if err == nil && claims != nil {
+		c.Locals("claims", *claims)
+	}
 
 	return c.Next()
 }

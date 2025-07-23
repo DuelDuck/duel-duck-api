@@ -5,19 +5,21 @@ import (
 	cryptoRand "crypto/rand"
 	"encoding/binary"
 	"fmt"
-	"gitlab.com/duel-duck/duel-duck-api/internal/model"
-	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
-	"gitlab.com/duel-duck/duel-duck-api/pkg/mtype"
 	"math"
 	"math/big"
 	"math/rand"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
+
+	"gitlab.com/duel-duck/duel-duck-api/internal/model"
+	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
+	"gitlab.com/duel-duck/duel-duck-api/pkg/mtype"
 )
 
 const (
-	MediaFilesDirectory = "resources/profile-icons/"
+	MediaFilesDirectory = "resources/static/profile-icons/"
 )
 
 func (s *UserService) createUserWithEmail(ctx context.Context, email mtype.Email) (*model.User, error) {
@@ -162,5 +164,5 @@ func (s *FileService) getRandomIconName() (string, error) {
 	rand.New(rand.NewSource(seed))
 	randomFile := svgFiles[rand.Intn(len(svgFiles))]
 
-	return randomFile, nil
+	return path.Join("/profile-icons", randomFile), nil
 }

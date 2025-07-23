@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"gitlab.com/duel-duck/duel-duck-api/internal/model"
 	"gitlab.com/duel-duck/duel-duck-api/internal/service"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
@@ -9,23 +10,26 @@ import (
 )
 
 type AdminHandler struct {
-	DuelService   *service.DuelService
-	UserService   *service.UserService
-	WalletService *service.WalletService
-	FileService   *service.FileService
+	DuelService           *service.DuelService
+	UserService           *service.UserService
+	WalletService         *service.WalletService
+	AdvertiserLinkService *service.AdvertiserLinkService
+	FileService           *service.FileService
 }
 
 func NewAdminHandler(
 	duelService *service.DuelService,
 	userService *service.UserService,
 	walletService *service.WalletService,
+	advertiserLinkService *service.AdvertiserLinkService,
 	fileService *service.FileService,
 ) *AdminHandler {
 	return &AdminHandler{
-		DuelService:   duelService,
-		UserService:   userService,
-		WalletService: walletService,
-		FileService:   fileService,
+		DuelService:           duelService,
+		UserService:           userService,
+		WalletService:         walletService,
+		AdvertiserLinkService: advertiserLinkService,
+		FileService:           fileService,
 	}
 }
 func (h *AdminHandler) RegisterRoutes(app *fiber.App, auth *AuthHandler) {
@@ -65,6 +69,14 @@ func (h *AdminHandler) RegisterRoutes(app *fiber.App, auth *AuthHandler) {
 		duel.Put("/subtopic", h.UpdateDuelSubtopic)
 
 		duel.Get("/moderator-stats", h.GetModeratorStats)
+	}
+
+	advertiserLink := adminGroup.Group("/advertiser-link")
+	{
+		advertiserLink.Post("/", h.CreateAdvertiserLink)
+		advertiserLink.Get("/", h.GetAllAdvertiserLinks)
+		advertiserLink.Put("/", h.EditAdvertiserLink)
+		advertiserLink.Delete("/:id", h.DeleteAdvertiserLink)
 	}
 }
 
@@ -272,13 +284,13 @@ func (h *AdminHandler) ApproveDuel(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			Authorization	header		string					true	"Authorization Bearer token"
-//	@Param			request			body		model.DuelApproveReq	true	"Crypto duel approval data"
-//	@Success		200				{object}	object{}				"Crypto duel approved successfully and made public"
-//	@Failure		400				{object}	apperrors.ErrorPublic	"Invalid request data"
-//	@Failure		401				{object}	apperrors.ErrorPublic	"Unauthorized - claims not found or invalid token"
-//	@Failure		403				{object}	apperrors.ErrorPublic	"Access forbidden - admin permissions required"
-//	@Failure		500				{object}	apperrors.ErrorPublic	"Internal server error during crypto duel approval"
+//	@Param			Authorization	header		string						true	"Authorization Bearer token"
+//	@Param			request			body		model.DuelApproveReq		true	"Crypto duel approval data"
+//	@Success		200				{object}	model.JoinCryptoDuelResp	"Crypto duel approved successfully and made public"
+//	@Failure		400				{object}	apperrors.ErrorPublic		"Invalid request data"
+//	@Failure		401				{object}	apperrors.ErrorPublic		"Unauthorized - claims not found or invalid token"
+//	@Failure		403				{object}	apperrors.ErrorPublic		"Access forbidden - admin permissions required"
+//	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error during crypto duel approval"
 //	@Router			/admin/duel/crypto/approve [put]
 func (h *AdminHandler) ApproveCryptoDuel(c fiber.Ctx) error {
 	var req model.DuelApproveReq
@@ -661,4 +673,143 @@ func (h *AdminHandler) GetModeratorStats(c fiber.Ctx) error {
 	}
 
 	return c.JSON(stats)
+}
+
+// CreateAdvertiserLink godoc
+//
+//	@Summary		Create a new advertiser link
+//	@Description	Allows an admin to create a new advertiser link with the given data. Requires admin authorization.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			Authorization	header		string							true	"Authorization Bearer token"
+//	@Param			request			body		model.CreateAdvertiserLinkReq	true	"Advertiser link creation data"
+//	@Success		200				{object}	model.AdvertiserLink			"Created advertiser link object"
+//	@Failure		400				{object}	apperrors.ErrorPublic			"Invalid request data or validation errors"
+//	@Failure		401				{object}	apperrors.ErrorPublic			"Authentication required or invalid token"
+//	@Failure		403				{object}	apperrors.ErrorPublic			"Access forbidden or insufficient permissions"
+//	@Failure		500				{object}	apperrors.ErrorPublic			"Internal server error during advertiser link creation"
+//	@Router			/admin/advertiser-link [post]
+func (h *AdminHandler) CreateAdvertiserLink(c fiber.Ctx) error {
+	var req model.CreateAdvertiserLinkReq
+	if err := c.Bind().JSON(&req); err != nil {
+		return apperrors.BadRequest("invalid request data")
+	}
+
+	err := req.Validate()
+	if err != nil {
+		return err
+	}
+
+	link, err := h.AdvertiserLinkService.CreateAdvertiserLink(c.Context(), &req)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(link)
+}
+
+// GetAllAdvertiserLinks godoc
+//
+//	@Summary		Get all advertiser links with filtering and pagination
+//	@Description	Allows an admin to retrieve all advertiser links. Supports filtering, sorting and pagination via query parameters. Requires admin authorization.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			Authorization				header		string						true	"Authorization Bearer token"
+//	@Param			opts.pagination.page_size	query		uint64						false	"Number of items per page"		default(10)
+//	@Param			opts.pagination.page_num	query		uint64						false	"Page number (starting from 1)"	default(1)
+//	@Param			opts.order.order_by			query		string						false	"Field to order by"
+//	@Param			opts.order.order_type		query		string						false	"Order type"	Enums(desc,asc)	default("")
+//	@Param			opts.filters[0].column		query		string						false	"Filter column name"
+//	@Param			opts.filters[0].operator	query		string						false	"Filter operator"
+//	@Param			opts.filters[0].value		query		string						false	"Filter value"
+//	@Param			opts.filters[0].where_or	query		bool						false	"Filter OR condition"
+//	@Success		200							{array}		model.AdvertiserLinkInfo	"List of advertiser links"
+//	@Failure		400							{object}	apperrors.ErrorPublic		"Invalid request params or query structure"
+//	@Failure		401							{object}	apperrors.ErrorPublic		"Authentication required or invalid token"
+//	@Failure		403							{object}	apperrors.ErrorPublic		"Access forbidden or insufficient permissions"
+//	@Failure		500							{object}	apperrors.ErrorPublic		"Internal server error during advertiser links retrieval"
+//	@Router			/admin/advertiser-link [get]
+func (h *AdminHandler) GetAllAdvertiserLinks(c fiber.Ctx) error {
+	var req model.GetAllAdvertiserLinksReq
+	if err := c.Bind().Query(&req); err != nil {
+		return apperrors.BadRequest("failed to parse request", err)
+	}
+
+	links, err := h.AdvertiserLinkService.GetAllAdvertiserLinks(c.Context(), &req)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(links)
+}
+
+// EditAdvertiserLink godoc
+//
+//	@Summary		Edit an existing advertiser link
+//	@Description	Allows an admin to update an existing advertiser link by ID. Requires admin authorization.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			Authorization	header		string						true	"Authorization Bearer token"
+//	@Param			request			body		model.EditAdvertiserLinkReq	true	"Advertiser link edit data"
+//	@Success		200				{object}	nil							"Advertiser link updated successfully"
+//	@Failure		400				{object}	apperrors.ErrorPublic		"Invalid request data or validation errors"
+//	@Failure		401				{object}	apperrors.ErrorPublic		"Authentication required or invalid token"
+//	@Failure		403				{object}	apperrors.ErrorPublic		"Access forbidden or insufficient permissions"
+//	@Failure		404				{object}	apperrors.ErrorPublic		"Advertiser link not found"
+//	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error during advertiser link update"
+//	@Router			/admin/advertiser-link [put]
+func (h *AdminHandler) EditAdvertiserLink(c fiber.Ctx) error {
+	var req model.EditAdvertiserLinkReq
+	if err := c.Bind().JSON(&req); err != nil {
+		return apperrors.BadRequest("invalid request data")
+	}
+
+	err := h.AdvertiserLinkService.EditAdvertiserLink(c.Context(), &req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteAdvertiserLink godoc
+//
+//	@Summary		Delete an advertiser link by ID
+//	@Description	Allows an admin to delete an advertiser link specified by link_id path parameter. Requires admin authorization.
+//	@Tags			admin
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			Authorization	header		string					true	"Authorization Bearer token"
+//	@Param			link_id			path		string					true	"UUID of the advertiser link to delete"
+//	@Success		200				{object}	nil						"Advertiser link deleted successfully"
+//	@Failure		400				{object}	apperrors.ErrorPublic	"Invalid request data"
+//	@Failure		401				{object}	apperrors.ErrorPublic	"Authentication required or invalid token"
+//	@Failure		403				{object}	apperrors.ErrorPublic	"Access forbidden or insufficient permissions"
+//	@Failure		404				{object}	apperrors.ErrorPublic	"Advertiser link not found"
+//	@Failure		500				{object}	apperrors.ErrorPublic	"Internal server error during advertiser link deletion"
+//	@Router			/admin/advertiser-link/{id} [delete]
+func (h *AdminHandler) DeleteAdvertiserLink(c fiber.Ctx) error {
+	linkIDStr := c.Params("id")
+	if linkIDStr == "" {
+		return apperrors.BadRequest("invalid request data")
+	}
+
+	linkID, err := uuid.Parse(linkIDStr)
+	if err != nil {
+		return apperrors.BadRequest("invalid request data")
+	}
+
+	err = h.AdvertiserLinkService.DeleteAdvertiserLink(c.Context(), linkID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

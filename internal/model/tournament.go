@@ -158,6 +158,7 @@ type TournamentCreateData struct {
 	Author         string    `json:"author"`
 	ImageURL       string    `json:"image_url"`
 	BgURL          string    `json:"bg_url"`
+	BgCardURL      string    `json:"bg_card_url"`
 	XURL           string    `json:"x_url"`
 	InstagramURL   string    `json:"instagram_url"`
 	YoutubeURL     string    `json:"youtube_url"`
@@ -189,6 +190,7 @@ func TournamentByCreateReq(
 		Author:         req.Author,
 		ImageURL:       req.ImageURL,
 		BgURL:          req.BgURL,
+		BgCardURL:      req.BgCardURL,
 		XURL:           req.XURL,
 		InstagramURL:   req.InstagramURL,
 		YoutubeURL:     req.YoutubeURL,

@@ -1,9 +1,15 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
-	"time"
+	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
+)
+
+var (
+	ErrAccountUnitialized = apperrors.NotFound("account is not initialized")
 )
 
 // Wallet is deprecated
@@ -58,14 +64,15 @@ type GetTransactionTypesReq struct {
 	Signatures []string `json:"signatures"`
 }
 
-type CreateWalletResp struct {
-	EncryptedMnemonic string `json:"encrypted_mnemonic"`
-	PublicAddress     string `json:"public_address"`
+type TransferDuckPointsReq struct {
+	Recipient string `json:"recipient"`
+	Amount    uint64 `json:"amount"`
 }
 
 type TransferReq struct {
-	Recipient string `json:"recipient"`
-	Amount    uint64 `json:"amount"`
+	Recipient string  `json:"recipient"`
+	Amount    float64 `json:"amount"`
+	Mint      string  `json:"mint"`
 }
 
 type ShowWalletReq struct {

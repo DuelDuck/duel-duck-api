@@ -36,6 +36,10 @@ func (s *DuelService) CreateNewCryptoDuelAdmin(
 		return nil, apperrors.Internal("failed to create crypto duel", err)
 	}
 
+	if err := s.sendDuelShareImageReq(duel); err != nil {
+		zap.L().Error("failed on duel share image request", zap.Error(err))
+	}
+
 	return duel, nil
 }
 
@@ -133,16 +137,23 @@ func (s *DuelService) CreateNewCryptoDuel(
 		return nil, apperrors.Internal("got invalid status on duel creation")
 	}
 
-	txHash, err := s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, req.Answer)
+	resp, err := s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, req.Answer)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = s.createAndJoinCryptoDuel(ctx, duel, user, req.Answer, txHash); err != nil {
+	if err = s.createAndJoinCryptoDuel(ctx, duel, user, req.Answer, resp.TxHash); err != nil {
 		return nil, err
 	}
 
-	return &model.CreateCryptoDuelResp{Duel: duel, TxHash: txHash}, nil
+	if err := s.sendDuelShareImageReq(duel); err != nil {
+		zap.L().Error("failed on duel share image request", zap.Error(err))
+	}
+
+	return &model.CreateCryptoDuelResp{
+		Duel:   duel,
+		Result: resp,
+	}, nil
 }
 
 func (s *DuelService) JoinCryptoDuel(
@@ -168,17 +179,14 @@ func (s *DuelService) JoinCryptoDuel(
 		return nil, apperrors.BadRequest("this endpoint must be used to join only crypto duels")
 	}
 
-	var txHash string
+	result := new(model.JoinSolanaRoomResp)
 	if duel.PlayersCount == 0 {
-		txHash, err = s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, req.Answer)
-		if err != nil {
-			return nil, err
-		}
+		result, err = s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, req.Answer)
 	} else {
-		txHash, err = s.WalletService.JoinSolanaRoom(ctx, duel, user, req.Answer)
-		if err != nil {
-			return nil, err
-		}
+		result, err = s.WalletService.JoinSolanaRoom(ctx, duel, user, req.Answer)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	var player *model.Player
@@ -197,7 +205,7 @@ func (s *DuelService) JoinCryptoDuel(
 			return apperrors.Internal("failed to update tournament leaderboard", err)
 		}
 
-		txRecord := &model.TransactionType{Signature: txHash, TxType: model.TransactionTypeDuelPrediction}
+		txRecord := &model.TransactionType{Signature: result.TxHash, TxType: model.TransactionTypeDuelPrediction}
 		if err = s.TxRepository.WithTx(tx).Create(ctx, txRecord); err != nil {
 			return apperrors.Internal("failed to create transaction record", err)
 		}
@@ -232,7 +240,7 @@ func (s *DuelService) JoinCryptoDuel(
 			zap.Any("user_id", user.ID), zap.Any("duel_id", duel.ID), zap.Error(err))
 	}
 
-	return &model.JoinCryptoDuelResp{Player: player, TxHash: txHash}, nil
+	return &model.JoinCryptoDuelResp{Player: player, Result: result}, nil
 }
 
 func (s *DuelService) ResolveCryptoBeforeEventDate(
@@ -618,7 +626,7 @@ func (s *DuelService) ApproveCryptoDuel(ctx context.Context,
 		return nil, apperrors.Internal("failed to get player by id", err)
 	}
 
-	txHash, err := s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, player.Answer)
+	result, err := s.WalletService.InitAndJoinSolanaRoom(ctx, duel, user, player.Answer)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +639,7 @@ func (s *DuelService) ApproveCryptoDuel(ctx context.Context,
 			return apperrors.Internal("failed to resolve a duel", err)
 		}
 
-		txRecord := &model.TransactionType{Signature: txHash, TxType: model.TransactionTypeDuelPrediction}
+		txRecord := &model.TransactionType{Signature: result.TxHash, TxType: model.TransactionTypeDuelPrediction}
 		if err = s.TxRepository.WithTx(tx).Create(ctx, txRecord); err != nil {
 			return apperrors.Internal("failed to create transaction record", err)
 		}
@@ -647,7 +655,10 @@ func (s *DuelService) ApproveCryptoDuel(ctx context.Context,
 		zap.L().Warn("failed to complete task of duel creation", zap.Any("duel_id", duel.ID), zap.Error(err))
 	}
 
-	return &model.JoinCryptoDuelResp{Player: player, TxHash: txHash}, nil
+	return &model.JoinCryptoDuelResp{
+		Player: player,
+		Result: result,
+	}, nil
 }
 
 func (s *DuelService) CancelCryptoDuelByAdmin(ctx context.Context,

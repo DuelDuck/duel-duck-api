@@ -39,5 +39,5 @@ func NewTxNotificationStatusFailed() *TxNotification {
 }
 
 type TxNotificationDeleteReq struct {
-	NotificationIDs uuid.UUIDs `json:"notification_ids"`
+	NotificationIDs []uuid.UUID `json:"notification_ids"`
 }

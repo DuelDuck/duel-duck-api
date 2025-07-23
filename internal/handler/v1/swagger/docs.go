@@ -15,6 +15,335 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/advertiser-link": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an admin to retrieve all advertiser links. Supports filtering, sorting and pagination via query parameters. Requires admin authorization.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get all advertiser links with filtering and pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "opts.pagination.page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number (starting from 1)",
+                        "name": "opts.pagination.page_num",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Field to order by",
+                        "name": "opts.order.order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "desc",
+                            "asc"
+                        ],
+                        "type": "string",
+                        "default": "\"\"",
+                        "description": "Order type",
+                        "name": "opts.order.order_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter column name",
+                        "name": "opts.filters[0].column",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter operator",
+                        "name": "opts.filters[0].operator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter value",
+                        "name": "opts.filters[0].value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter OR condition",
+                        "name": "opts.filters[0].where_or",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of advertiser links",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AdvertiserLinkInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request params or query structure",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "403": {
+                        "description": "Access forbidden or insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during advertiser links retrieval",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an admin to update an existing advertiser link by ID. Requires admin authorization.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Edit an existing advertiser link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Advertiser link edit data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EditAdvertiserLinkReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Advertiser link updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request data or validation errors",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "403": {
+                        "description": "Access forbidden or insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "404": {
+                        "description": "Advertiser link not found",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during advertiser link update",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an admin to create a new advertiser link with the given data. Requires admin authorization.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a new advertiser link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Advertiser link creation data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateAdvertiserLinkReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created advertiser link object",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdvertiserLink"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data or validation errors",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "403": {
+                        "description": "Access forbidden or insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during advertiser link creation",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/advertiser-link/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an admin to delete an advertiser link specified by link_id path parameter. Requires admin authorization.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete an advertiser link by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "UUID of the advertiser link to delete",
+                        "name": "link_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Advertiser link deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "403": {
+                        "description": "Access forbidden or insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "404": {
+                        "description": "Advertiser link not found",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during advertiser link deletion",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/delete-image": {
             "post": {
                 "security": [
@@ -542,7 +871,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Crypto duel approved successfully and made public",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/model.JoinCryptoDuelResp"
                         }
                     },
                     "400": {
@@ -1940,7 +2269,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Duel created successfully",
                         "schema": {
-                            "$ref": "#/definitions/model.Duel"
+                            "$ref": "#/definitions/model.CreateCryptoDuelResp"
                         }
                     },
                     "400": {
@@ -3736,17 +4065,79 @@ const docTemplate = `{
                 "summary": "Get all FAQs",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of items per page",
-                        "name": "limit",
+                        "type": "boolean",
+                        "description": "Filter by answered status",
+                        "name": "answered",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter only current user's questions",
+                        "name": "me",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 0,
-                        "description": "Page number (starting from 0)",
-                        "name": "offset",
+                        "description": "Filter by specific shared FAQ ID",
+                        "name": "share_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "opts.pagination.page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number (starting from 1)",
+                        "name": "opts.pagination.page_num",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "time",
+                            "marks_value"
+                        ],
+                        "type": "string",
+                        "description": "Field to order by",
+                        "name": "opts.order.order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "desc",
+                            "asc"
+                        ],
+                        "type": "string",
+                        "description": "Order type",
+                        "name": "opts.order.order_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter column name",
+                        "name": "opts.filters[0].column",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter operator",
+                        "name": "opts.filters[0].operator",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter value",
+                        "name": "opts.filters[0].value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter OR condition",
+                        "name": "opts.filters[0].where_or",
                         "in": "query"
                     }
                 ],
@@ -3755,7 +4146,20 @@ const docTemplate = `{
                         "description": "List of FAQs with pagination info",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "faqs": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/model.FAQ"
+                                    }
+                                },
+                                "page_num": {
+                                    "type": "integer"
+                                },
+                                "page_size": {
+                                    "type": "integer"
+                                }
+                            }
                         }
                     },
                     "400": {
@@ -3866,8 +4270,10 @@ const docTemplate = `{
                         "description": "Success status",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "boolean"
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                }
                             }
                         }
                     },
@@ -5129,6 +5535,117 @@ const docTemplate = `{
                 }
             }
         },
+        "/wallet/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all swap notifications associated with the authenticated user's wallet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Get all swap notifications for the authenticated user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of transaction notifications",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.TxNotification"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes one or more transaction notifications for the authenticated user by their notification IDs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Delete transaction notifications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "List of notification IDs to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TxNotificationDeleteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifications deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request data or missing notification IDs",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            }
+        },
         "/wallet/swap": {
             "post": {
                 "security": [
@@ -5513,7 +6030,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Transfers USDC from the authenticated user's wallet to a recipient's wallet address.",
+                "description": "Transfers tokens from the authenticated user's wallet to a recipient's wallet address.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5619,7 +6136,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.TransferReq"
+                            "$ref": "#/definitions/model.TransferDuckPointsReq"
                         }
                     }
                 ],
@@ -5689,6 +6206,111 @@ const docTemplate = `{
                 }
             }
         },
+        "model.AdvertiserLink": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "redirected_link": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "visitors_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.AdvertiserLinkInfo": {
+            "type": "object",
+            "properties": {
+                "active_users_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "duels_created_count": {
+                    "type": "integer"
+                },
+                "duels_ddp_count": {
+                    "type": "integer"
+                },
+                "duels_usdc_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "redirected_link": {
+                    "type": "string"
+                },
+                "referrals_count": {
+                    "type": "integer"
+                },
+                "registered_users_count": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "users_balance_ddp": {
+                    "type": "integer"
+                },
+                "users_balance_usdc": {
+                    "type": "number"
+                },
+                "visitors_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.AutoswapResult": {
+            "type": "object",
+            "properties": {
+                "ATA": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "decimals": {
+                    "type": "integer"
+                },
+                "mint": {
+                    "type": "string"
+                },
+                "swapped_amount": {
+                    "type": "integer"
+                },
+                "tx_hash": {
+                    "type": "string"
+                },
+                "usd_price": {
+                    "type": "number"
+                }
+            }
+        },
         "model.Coin": {
             "type": "object",
             "properties": {
@@ -5709,6 +6331,28 @@ const docTemplate = `{
                 },
                 "symbol": {
                     "type": "string"
+                }
+            }
+        },
+        "model.CreateAdvertiserLinkReq": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateCryptoDuelResp": {
+            "type": "object",
+            "properties": {
+                "duel": {
+                    "$ref": "#/definitions/model.Duel"
+                },
+                "result": {
+                    "$ref": "#/definitions/model.JoinSolanaRoomResp"
                 }
             }
         },
@@ -6170,6 +6814,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.EditAdvertiserLinkReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "redirected_link": {
+                    "type": "string"
+                }
+            }
+        },
         "model.FAQ": {
             "type": "object",
             "properties": {
@@ -6191,14 +6849,17 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "is_answered": {
-                    "type": "boolean"
+                "image_url": {
+                    "type": "string"
                 },
-                "is_marked": {
+                "is_answered": {
                     "type": "boolean"
                 },
                 "is_me": {
                     "type": "boolean"
+                },
+                "marked": {
+                    "type": "integer"
                 },
                 "marks_value": {
                     "type": "integer"
@@ -6214,6 +6875,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -6237,11 +6901,11 @@ const docTemplate = `{
         "model.JoinCryptoDuelResp": {
             "type": "object",
             "properties": {
-                "duel": {
+                "player": {
                     "$ref": "#/definitions/model.Player"
                 },
-                "tx_hash": {
-                    "type": "string"
+                "result": {
+                    "$ref": "#/definitions/model.JoinSolanaRoomResp"
                 }
             }
         },
@@ -6252,6 +6916,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "duel_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.JoinSolanaRoomResp": {
+            "type": "object",
+            "properties": {
+                "autoswap_result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.AutoswapResult"
+                    }
+                },
+                "tx_hash": {
                     "type": "string"
                 }
             }
@@ -6392,6 +7070,9 @@ const docTemplate = `{
         "model.SignInWithEmail": {
             "type": "object",
             "properties": {
+                "advertiser_link_token": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -6406,6 +7087,9 @@ const docTemplate = `{
         "model.SignInWithGoogle": {
             "type": "object",
             "properties": {
+                "advertiser_link_token": {
+                    "type": "string"
+                },
                 "referrer_token": {
                     "type": "string"
                 }
@@ -6414,6 +7098,9 @@ const docTemplate = `{
         "model.SignInWithTelegramMiniAppReq": {
             "type": "object",
             "properties": {
+                "advertiser_link_token": {
+                    "type": "string"
+                },
                 "init_data_raw": {
                     "type": "string"
                 },
@@ -6592,6 +7279,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
+                    "type": "string"
+                },
+                "bg_card_url": {
                     "type": "string"
                 },
                 "bg_url": {
@@ -6863,7 +7553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.TransferReq": {
+        "model.TransferDuckPointsReq": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -6871,6 +7561,46 @@ const docTemplate = `{
                 },
                 "recipient": {
                     "type": "string"
+                }
+            }
+        },
+        "model.TransferReq": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "mint": {
+                    "type": "string"
+                },
+                "recipient": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TxNotification": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending, success, failed",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.TxNotificationDeleteReq": {
+            "type": "object",
+            "properties": {
+                "notification_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

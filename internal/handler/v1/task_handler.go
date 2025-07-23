@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 
 	"gitlab.com/duel-duck/duel-duck-api/internal/model"
 	"gitlab.com/duel-duck/duel-duck-api/internal/service"
@@ -27,12 +28,13 @@ func NewTaskHandler(
 
 func (h *TaskHandler) RegisterRoutes(app *fiber.App, auth *AuthHandler) {
 	task := app.Group("/task")
-	task.Use(auth.AuthMiddleware)
-
 	{
-		task.Get("/", h.GetTasks)
-		task.Post("/claim-reward", h.ClaimReward)
+		task.Get("/", h.GetTasks, auth.OptionalAuthMiddleware)
+	}
 
+	task.Use(auth.AuthMiddleware)
+	{
+		task.Post("/claim-reward", h.ClaimReward)
 		task.Post("/attach-email", h.CompleteAttachEmail)
 	}
 }
@@ -94,7 +96,9 @@ func (h *TaskHandler) CompleteAttachEmail(c fiber.Ctx) error {
 func (h *TaskHandler) GetTasks(c fiber.Ctx) error {
 	claims, ok := c.Locals("claims").(auth.TokenClaims)
 	if !ok {
-		return apperrors.Unauthorized("claims not found")
+		// Since GetTasks is a public endpoint
+		// If the user is authorized, we set his id to nil
+		claims.UserID = uuid.Nil
 	}
 
 	tasks, userStats, err := h.TaskService.GetTasksByUserID(c.Context(), claims.UserID)

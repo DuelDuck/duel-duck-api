@@ -2,14 +2,15 @@ package jupiter
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/goccy/go-json"
 	"gitlab.com/duel-duck/duel-duck-api/config"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type Client struct {

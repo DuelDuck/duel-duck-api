@@ -2,9 +2,10 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -68,7 +69,6 @@ func (s *TxNotificationStorage) Save(
 	return nil
 }
 
-// Get all notifications in order (oldest to newest)
 func (s *TxNotificationStorage) GetAll(
 	ctx context.Context,
 	userID uuid.UUID,
@@ -83,7 +83,7 @@ func (s *TxNotificationStorage) GetAll(
 	notifications := make([]model.TxNotification, 0, len(vals))
 	for _, v := range vals {
 		var n model.TxNotification
-		if err := json.Unmarshal([]byte(v), &n); err == nil {
+		if err = json.Unmarshal([]byte(v), &n); err == nil {
 			notifications = append(notifications, n)
 		}
 	}
@@ -91,8 +91,6 @@ func (s *TxNotificationStorage) GetAll(
 	return notifications, nil
 }
 
-// Delete notification by id
-// Delete multiple notifications by IDs for a user
 func (s *TxNotificationStorage) Delete(
 	ctx context.Context,
 	userID uuid.UUID,
@@ -131,4 +129,100 @@ func (s *TxNotificationStorage) Delete(
 		return apperrors.Internal("failed to delete notification(s)", err)
 	}
 	return nil
+}
+
+func (s *TxNotificationStorage) update(
+	ctx context.Context,
+	userID uuid.UUID,
+	notificationID uuid.UUID,
+	newStatus uint8,
+	newCreatedAt uint64,
+) error {
+	key := getUserTxNotiKey(userID)
+
+	// Get all notifications
+	vals, err := s.client.ZRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		return apperrors.Internal("failed to get notifications for update", err)
+	}
+
+	var (
+		oldValue    string
+		updatedNoti model.TxNotification
+		found       bool
+	)
+
+	for _, v := range vals {
+		var n model.TxNotification
+		if err := json.Unmarshal([]byte(v), &n); err == nil {
+			if n.ID == notificationID {
+				// Update fields
+				n.Status = newStatus
+				n.CreatedAt = newCreatedAt
+				updatedNoti = n
+				oldValue = v
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		return apperrors.NotFound("notification not found")
+	}
+
+	if err := s.client.ZRem(ctx, key, oldValue).Err(); err != nil {
+		return apperrors.Internal("failed to remove old notification", err)
+	}
+
+	data, err := json.Marshal(updatedNoti)
+	if err != nil {
+		return apperrors.Internal("failed to marshal updated notification", err)
+	}
+
+	// Add updated notification with new score
+	pipe := s.client.Pipeline()
+	pipe.ZAdd(ctx, key, redis.Z{
+		Score:  float64(updatedNoti.CreatedAt),
+		Member: string(data),
+	})
+
+	// Trim to last 10 (keep newest)
+	pipe.ZRemRangeByRank(ctx, key, 0, -(userTxNotificationLimit + 1))
+	pipe.Expire(ctx, key, txNotificationTTL)
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		return apperrors.Internal("failed to update notification", err)
+	}
+
+	return nil
+}
+
+func (s *TxNotificationStorage) SetStatusSuccess(
+	ctx context.Context,
+	userID uuid.UUID,
+	notificationID uuid.UUID,
+) error {
+	return s.update(
+		ctx,
+		userID,
+		notificationID,
+		model.TxNotificationStatusSuccess,
+		uint64(time.Now().UnixMilli()),
+	)
+}
+
+func (s *TxNotificationStorage) SetStatusFailed(
+	ctx context.Context,
+	userID uuid.UUID,
+	notificationID uuid.UUID,
+) error {
+	return s.update(
+		ctx,
+		userID,
+		notificationID,
+		model.TxNotificationStatusFailed,
+		uint64(time.Now().UnixMilli()),
+	)
 }

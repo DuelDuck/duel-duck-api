@@ -3,6 +3,10 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"gitlab.com/duel-duck/duel-duck-api/config"
@@ -10,8 +14,6 @@ import (
 	"gitlab.com/duel-duck/duel-duck-api/internal/service"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	"go.uber.org/zap"
-	"strconv"
-	"time"
 )
 
 type WelcomeTGBot struct {
@@ -21,6 +23,8 @@ type WelcomeTGBot struct {
 	log              *zap.Logger
 	environment      string
 	loginURLTemplate string
+
+	userTokenCacheMap map[int64]string
 }
 
 const (
@@ -45,12 +49,13 @@ func NewWelcomeTGBot(
 	}
 
 	welcomeBot := &WelcomeTGBot{
-		WelcomeBot:       bot,
-		log:              log,
-		environment:      c.App.Environment,
-		loginURLTemplate: c.HTTP.PublicDomain + "?telegram_id=%s&code=%s&username=%s",
-		UserService:      userService,
-		AuthService:      authService,
+		WelcomeBot:        bot,
+		log:               log,
+		environment:       c.App.Environment,
+		loginURLTemplate:  c.HTTP.PublicDomain + "?telegram_id=%s&code=%s&username=%s",
+		UserService:       userService,
+		AuthService:       authService,
+		userTokenCacheMap: make(map[int64]string, 5),
 	}
 
 	return welcomeBot, nil
@@ -137,6 +142,27 @@ func (b *WelcomeTGBot) LoginCommandHandler(message *tgbotapi.Message) error {
 		LastName:   message.From.LastName,
 		Username:   message.From.UserName,
 	}
+
+	// Parse ref and link tokens for tg bot sign in
+	userTokens := b.userTokenCacheMap[message.From.ID]
+	if len(userTokens) > 0 {
+		tokens := strings.SplitN(userTokens, "___", 2)
+		for _, t := range tokens {
+			_, refToken, ok := strings.Cut(t, "ref=")
+			if ok {
+				authTG.ReferrerToken = refToken
+				continue
+			}
+
+			_, linkToken, ok := strings.Cut(t, "link=")
+			if ok {
+				authTG.AdvertiserLinkToken = linkToken
+			}
+		}
+
+		delete(b.userTokenCacheMap, message.From.ID)
+	}
+
 	user, err := b.UserService.SignInWithTelegram(ctx, authTG)
 	if err != nil {
 		return err
@@ -176,6 +202,12 @@ func (b *WelcomeTGBot) StartCommandHandler(message *tgbotapi.Message) error {
 			tgbotapi.NewKeyboardButton(LoginText),
 		),
 	)
+
+	// Store refferal or link tokens
+	token := message.CommandArguments()
+	if token != "" {
+		b.userTokenCacheMap[message.From.ID] = token
+	}
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, WelcomeStartText)
 	msg.ReplyMarkup = keyboard

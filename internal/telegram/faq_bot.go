@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,8 @@ import (
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
 	"go.uber.org/zap"
 )
+
+const regExp = `^[a-zA-Z\p{N}\p{P}\p{S}\p{Zs}]*$`
 
 var faqActionsMap = map[string]bool{
 	"approve": true,
@@ -299,10 +302,10 @@ func (b *FAQTGBot) handleFAQCallback(cb *tgbotapi.CallbackQuery) {
 	_ = b.AnswerCallback(cb.ID, "")
 }
 
-func (b *FAQTGBot) HandleError(err error) {
+func (b *FAQTGBot) HandleError(chatID int64, err error) {
 	if err != nil {
 		zap.L().Error(err.Error())
-		msg := tgbotapi.NewMessage(b.b.Self.ID, "👮 Something went wrong 👮")
+		msg := tgbotapi.NewMessage(chatID, "👮 Something went wrong 👮")
 		msg.DisableNotification = true
 
 		_, err = b.b.Send(msg)
@@ -340,21 +343,33 @@ func (b *FAQTGBot) handleFAQMessage(msg *tgbotapi.Message) {
 		return
 	}
 
+	re := regexp.MustCompile(regExp)
+
+	text := msg.Text
+	if text == "" {
+		text = msg.Caption
+	}
+
+	if !re.MatchString(text) {
+		_ = b.SendMessage(b.NewMessage(fmt.Sprintf("⛔ Only Latin alphabet is supported ⛔#%d", id), false, msg.From.ID))
+		return
+	}
+
 	var image string
 	if msg.Photo != nil {
 		for i := len(msg.Photo) - 1; i >= 0; i-- {
-			if (msg.Photo)[i].FileSize < 1_000_000 {
+			if (msg.Photo)[i].FileSize < 3_000_000 {
 				fileID := (msg.Photo)[i].FileID
 				file, fileURL, err := b.GetFile(fileID)
 				if err != nil {
-					b.HandleError(err)
+					b.HandleError(msg.From.ID, err)
 					return
 				}
 
 				imageURL, err := b.FileService.
 					SaveFAQAnswersImages(b.FAQService.MediaUrl, fileURL, file)
 				if err != nil {
-					b.HandleError(err)
+					b.HandleError(msg.From.ID, err)
 					return
 				}
 
@@ -362,35 +377,34 @@ func (b *FAQTGBot) handleFAQMessage(msg *tgbotapi.Message) {
 					image = imageURL
 				}
 
+				break
 			}
 		}
 	} else if msg.Document != nil && msg.Document.FileID != "" {
 		file, fileURL, err := b.GetFile(msg.Document.FileID)
 		if err != nil {
-			b.HandleError(err)
+			b.HandleError(msg.From.ID, err)
 			return
 		}
 
 		imageURL, err := b.FileService.
 			SaveFAQAnswersImages(b.FAQService.MediaUrl, fileURL, file)
 		if err != nil {
-			b.HandleError(err)
+			b.HandleError(msg.From.ID, err)
 			return
 		}
 
 		if imageURL != "" {
 			image = imageURL
 		}
-	}
-
-	text := msg.Text
-	if text == "" {
-		text = msg.Caption
+	} else if b.isNotAllowedMedia(msg) {
+		_ = b.SendMessage(b.NewMessage(fmt.Sprintf("⛔ Failed to save media answer. Only 1 image per answer is supported ⛔#%d", id), false, msg.From.ID))
+		return
 	}
 
 	err = b.createOrUpdateFAQAnswer(id, m, text, image)
 	if err != nil {
-		b.HandleError(err)
+		b.HandleError(msg.From.ID, err)
 		return
 	}
 
@@ -480,4 +494,16 @@ func extractFAQIDFromMessage(msg string) (uint32, string) {
 
 func (b *FAQTGBot) isAllowedOrigin(userID int64) bool {
 	return b.allowOrigins[userID]
+}
+
+func (b *FAQTGBot) isNotAllowedMedia(msg *tgbotapi.Message) bool {
+	return msg.Video != nil ||
+		msg.VideoNote != nil ||
+		msg.Animation != nil ||
+		msg.Audio != nil ||
+		msg.Voice != nil ||
+		msg.Sticker != nil ||
+		msg.Contact != nil ||
+		msg.Location != nil ||
+		msg.Poll != nil
 }

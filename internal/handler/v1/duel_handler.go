@@ -112,12 +112,12 @@ func (h *DuelHandler) CreateDuel(c fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			Authorization	header		string					true	"Authorization Bearer token"
-//	@Param			request			body		model.CreateDuelReq		true	"Duel creation request data"
-//	@Success		200				{object}	model.Duel				"Duel created successfully"
-//	@Failure		400				{object}	apperrors.ErrorPublic	"Invalid request data"
-//	@Failure		401				{object}	apperrors.ErrorPublic	"Unauthorized - Invalid or missing claims"
-//	@Failure		500				{object}	apperrors.ErrorPublic	"Internal server error"
+//	@Param			Authorization	header		string						true	"Authorization Bearer token"
+//	@Param			request			body		model.CreateDuelReq			true	"Duel creation request data"
+//	@Success		200				{object}	model.CreateCryptoDuelResp	"Duel created successfully"
+//	@Failure		400				{object}	apperrors.ErrorPublic		"Invalid request data"
+//	@Failure		401				{object}	apperrors.ErrorPublic		"Unauthorized - Invalid or missing claims"
+//	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error"
 //	@Router			/crypto-duel [post]
 func (h *DuelHandler) CreateCryptoDuel(c fiber.Ctx) error {
 	var req model.CreateDuelReq
@@ -189,7 +189,7 @@ func (h *DuelHandler) JoinDuel(c fiber.Ctx) error {
 //	@Failure		401				{object}	apperrors.ErrorPublic		"Unauthorized - Invalid or missing claims"
 //	@Failure		404				{object}	apperrors.ErrorPublic		"Crypto duel not found"
 //	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error"
-//	@Router			/duel/join-crypto [post]
+//	@Router			/crypto-duel/join [post]
 func (h *DuelHandler) JoinCryptoDuel(c fiber.Ctx) error {
 	var req model.JoinDuelReq
 	if err := c.Bind().JSON(&req); err != nil {

@@ -48,6 +48,10 @@ func Module() fx.Option {
 			NewWalletRepository,
 		),
 		fx.Provide(
+			repository.NewGenericRepository[model.AdvertiserLink, uuid.UUID],
+			NewAdvertiserLinkRepository,
+		),
+		fx.Provide(
 			NewTaskRepository,
 		),
 		fx.Provide(

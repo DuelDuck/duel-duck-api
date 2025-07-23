@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -69,6 +70,26 @@ func (s *DuelService) CreateAndJoinDuel(
 	if err = s.completeDailyStreakTask(ctx, user.ID); err != nil {
 		zap.L().Warn("failed to complete task of daily streak",
 			zap.Any("user_id", user.ID), zap.Any("duel_id", duel.ID), zap.Error(err))
+	}
+
+	if err := s.sendDuelShareImageReq(duel); err != nil {
+		zap.L().Error("failed on duel share image request", zap.Error(err))
+	}
+
+	return nil
+}
+
+func (s *DuelService) sendDuelShareImageReq(duel *model.Duel) error {
+	resp, err := s.DuelShareClient.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(duel).
+		Post(s.DuelShareImageAPI)
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return fmt.Errorf("status: %d, body: %s", resp.StatusCode(), resp.String())
 	}
 
 	return nil
@@ -172,7 +193,7 @@ func (s *DuelService) completeCreateDuelTask(ctx context.Context, duelID uuid.UU
 		if err != nil {
 			return apperrors.Internal("failed to get owner id by duel id", err)
 		}
-		
+
 		if userID == uuid.Nil {
 			return apperrors.NotFound("duel id not found")
 		}

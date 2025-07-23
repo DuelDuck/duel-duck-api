@@ -20,6 +20,75 @@ definitions:
       state:
         type: integer
     type: object
+  model.AdvertiserLink:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      link:
+        type: string
+      name:
+        type: string
+      redirected_link:
+        type: string
+      token:
+        type: string
+      updated_at:
+        type: string
+      visitors_count:
+        type: integer
+    type: object
+  model.AdvertiserLinkInfo:
+    properties:
+      active_users_count:
+        type: integer
+      created_at:
+        type: string
+      duels_created_count:
+        type: integer
+      duels_ddp_count:
+        type: integer
+      duels_usdc_count:
+        type: integer
+      id:
+        type: string
+      link:
+        type: string
+      name:
+        type: string
+      redirected_link:
+        type: string
+      referrals_count:
+        type: integer
+      registered_users_count:
+        type: integer
+      updated_at:
+        type: string
+      users_balance_ddp:
+        type: integer
+      users_balance_usdc:
+        type: number
+      visitors_count:
+        type: integer
+    type: object
+  model.AutoswapResult:
+    properties:
+      ATA:
+        type: string
+      amount:
+        type: integer
+      decimals:
+        type: integer
+      mint:
+        type: string
+      swapped_amount:
+        type: integer
+      tx_hash:
+        type: string
+      usd_price:
+        type: number
+    type: object
   model.Coin:
     properties:
       id:
@@ -34,6 +103,20 @@ definitions:
         type: string
       symbol:
         type: string
+    type: object
+  model.CreateAdvertiserLinkReq:
+    properties:
+      link:
+        type: string
+      name:
+        type: string
+    type: object
+  model.CreateCryptoDuelResp:
+    properties:
+      duel:
+        $ref: '#/definitions/model.Duel'
+      result:
+        $ref: '#/definitions/model.JoinSolanaRoomResp'
     type: object
   model.CreateDuelEntityReq:
     properties:
@@ -337,6 +420,15 @@ definitions:
       total_duels:
         type: integer
     type: object
+  model.EditAdvertiserLinkReq:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      redirected_link:
+        type: string
+    type: object
   model.FAQ:
     properties:
       answer:
@@ -351,12 +443,14 @@ definitions:
         type: array
       id:
         type: integer
+      image_url:
+        type: string
       is_answered:
-        type: boolean
-      is_marked:
         type: boolean
       is_me:
         type: boolean
+      marked:
+        type: integer
       marks_value:
         type: integer
       question:
@@ -367,6 +461,8 @@ definitions:
         items:
           type: string
         type: array
+      username:
+        type: string
     type: object
   model.GetTransactionHistoryResp:
     properties:
@@ -381,16 +477,25 @@ definitions:
     type: object
   model.JoinCryptoDuelResp:
     properties:
-      duel:
+      player:
         $ref: '#/definitions/model.Player'
-      tx_hash:
-        type: string
+      result:
+        $ref: '#/definitions/model.JoinSolanaRoomResp'
     type: object
   model.JoinDuelReq:
     properties:
       answer:
         type: integer
       duel_id:
+        type: string
+    type: object
+  model.JoinSolanaRoomResp:
+    properties:
+      autoswap_result:
+        items:
+          $ref: '#/definitions/model.AutoswapResult'
+        type: array
+      tx_hash:
         type: string
     type: object
   model.Leader:
@@ -482,6 +587,8 @@ definitions:
     type: object
   model.SignInWithEmail:
     properties:
+      advertiser_link_token:
+        type: string
       code:
         type: string
       email:
@@ -491,11 +598,15 @@ definitions:
     type: object
   model.SignInWithGoogle:
     properties:
+      advertiser_link_token:
+        type: string
       referrer_token:
         type: string
     type: object
   model.SignInWithTelegramMiniAppReq:
     properties:
+      advertiser_link_token:
+        type: string
       init_data_raw:
         type: string
       referral_token:
@@ -612,6 +723,8 @@ definitions:
   model.TournamentCreateData:
     properties:
       author:
+        type: string
+      bg_card_url:
         type: string
       bg_url:
         type: string
@@ -789,12 +902,38 @@ definitions:
       tx_type:
         type: integer
     type: object
-  model.TransferReq:
+  model.TransferDuckPointsReq:
     properties:
       amount:
         type: integer
       recipient:
         type: string
+    type: object
+  model.TransferReq:
+    properties:
+      amount:
+        type: number
+      mint:
+        type: string
+      recipient:
+        type: string
+    type: object
+  model.TxNotification:
+    properties:
+      created_at:
+        type: integer
+      id:
+        type: string
+      status:
+        description: pending, success, failed
+        type: integer
+    type: object
+  model.TxNotificationDeleteReq:
+    properties:
+      notification_ids:
+        items:
+          type: string
+        type: array
     type: object
   model.User:
     properties:
@@ -962,6 +1101,225 @@ info:
   title: Duel Duck API
   version: "1.0"
 paths:
+  /admin/advertiser-link:
+    get:
+      consumes:
+      - application/json
+      description: Allows an admin to retrieve all advertiser links. Supports filtering,
+        sorting and pagination via query parameters. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: opts.pagination.page_size
+        type: integer
+      - default: 1
+        description: Page number (starting from 1)
+        in: query
+        name: opts.pagination.page_num
+        type: integer
+      - description: Field to order by
+        in: query
+        name: opts.order.order_by
+        type: string
+      - default: '""'
+        description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of advertiser links
+          schema:
+            items:
+              $ref: '#/definitions/model.AdvertiserLinkInfo'
+            type: array
+        "400":
+          description: Invalid request params or query structure
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during advertiser links retrieval
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get all advertiser links with filtering and pagination
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Allows an admin to create a new advertiser link with the given
+        data. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Advertiser link creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateAdvertiserLinkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created advertiser link object
+          schema:
+            $ref: '#/definitions/model.AdvertiserLink'
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during advertiser link creation
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Create a new advertiser link
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin to update an existing advertiser link by ID. Requires
+        admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Advertiser link edit data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.EditAdvertiserLinkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Advertiser link updated successfully
+        "400":
+          description: Invalid request data or validation errors
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Advertiser link not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during advertiser link update
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Edit an existing advertiser link
+      tags:
+      - admin
+  /admin/advertiser-link/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Allows an admin to delete an advertiser link specified by link_id
+        path parameter. Requires admin authorization.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: UUID of the advertiser link to delete
+        in: path
+        name: link_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Advertiser link deleted successfully
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid token
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "403":
+          description: Access forbidden or insufficient permissions
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "404":
+          description: Advertiser link not found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error during advertiser link deletion
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Delete an advertiser link by ID
+      tags:
+      - admin
   /admin/delete-image:
     post:
       consumes:
@@ -1307,7 +1665,7 @@ paths:
         "200":
           description: Crypto duel approved successfully and made public
           schema:
-            type: object
+            $ref: '#/definitions/model.JoinCryptoDuelResp'
         "400":
           description: Invalid request data
           schema:
@@ -2244,7 +2602,7 @@ paths:
         "200":
           description: Duel created successfully
           schema:
-            $ref: '#/definitions/model.Duel'
+            $ref: '#/definitions/model.CreateCryptoDuelResp'
         "400":
           description: Invalid request data
           schema:
@@ -3454,23 +3812,73 @@ paths:
       description: Retrieve a list of all FAQs with optional filtering, sorting, and
         pagination.
       parameters:
+      - description: Filter by answered status
+        in: query
+        name: answered
+        type: boolean
+      - description: Filter only current user's questions
+        in: query
+        name: me
+        type: boolean
+      - description: Filter by specific shared FAQ ID
+        in: query
+        name: share_id
+        type: integer
       - default: 10
         description: Number of items per page
         in: query
-        name: limit
+        name: opts.pagination.page_size
         type: integer
-      - default: 0
-        description: Page number (starting from 0)
+      - default: 1
+        description: Page number (starting from 1)
         in: query
-        name: offset
+        name: opts.pagination.page_num
         type: integer
+      - description: Field to order by
+        enum:
+        - time
+        - marks_value
+        in: query
+        name: opts.order.order_by
+        type: string
+      - description: Order type
+        enum:
+        - desc
+        - asc
+        in: query
+        name: opts.order.order_type
+        type: string
+      - description: Filter column name
+        in: query
+        name: opts.filters[0].column
+        type: string
+      - description: Filter operator
+        in: query
+        name: opts.filters[0].operator
+        type: string
+      - description: Filter value
+        in: query
+        name: opts.filters[0].value
+        type: string
+      - description: Filter OR condition
+        in: query
+        name: opts.filters[0].where_or
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
           description: List of FAQs with pagination info
           schema:
-            additionalProperties: true
+            properties:
+              faqs:
+                items:
+                  $ref: '#/definitions/model.FAQ'
+                type: array
+              page_num:
+                type: integer
+              page_size:
+                type: integer
             type: object
         "400":
           description: Invalid request parameters
@@ -3545,8 +3953,9 @@ paths:
         "200":
           description: Success status
           schema:
-            additionalProperties:
-              type: boolean
+            properties:
+              success:
+                type: boolean
             type: object
         "400":
           description: Invalid request data
@@ -4396,6 +4805,79 @@ paths:
       summary: Get Duck Points transfer history
       tags:
       - wallet
+  /wallet/notifications:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes one or more transaction notifications for the authenticated
+        user by their notification IDs.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: List of notification IDs to delete
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TxNotificationDeleteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notifications deleted successfully
+        "400":
+          description: Invalid request data or missing notification IDs
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Delete transaction notifications
+      tags:
+      - wallet
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all swap notifications associated with the authenticated
+        user's wallet.
+      parameters:
+      - description: Authorization Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of transaction notifications
+          schema:
+            items:
+              $ref: '#/definitions/model.TxNotification'
+            type: array
+        "401":
+          description: Authentication required or invalid credentials
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apperrors.ErrorPublic'
+      security:
+      - BearerAuth: []
+      summary: Get all swap notifications for the authenticated user
+      tags:
+      - wallet
   /wallet/swap:
     post:
       consumes:
@@ -4652,7 +5134,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Transfers USDC from the authenticated user's wallet to a recipient's
+      description: Transfers tokens from the authenticated user's wallet to a recipient's
         wallet address.
       parameters:
       - description: Authorization Bearer token
@@ -4718,7 +5200,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.TransferReq'
+          $ref: '#/definitions/model.TransferDuckPointsReq'
       produces:
       - application/json
       responses:

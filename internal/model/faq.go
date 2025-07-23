@@ -7,22 +7,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
+	repo "gitlab.com/duel-duck/duel-duck-api/pkg/repository"
 )
 
 var (
-	MediaUrlProduction = "https://duelduck.com/media"
-	MediaUrlStage      = "https://stage.duelduck.com/media"
+	MediaUrlProduction = "https://api.duelduck.com/media"
+	MediaUrlStage      = "https://api-stage.duelduck.com/media"
 
-	DefaultLimit  uint32 = 20
-	DefaultOffset uint32 = 0
-
-	faqDirectionMap = map[string]bool{
-		"asc":  true,
-		"desc": true,
-		"":     true,
+	faqMarkStateMap = map[int32]bool{
+		0:  true,
+		1:  true,
+		-1: true,
 	}
 
-	faqSortMap = map[string]bool{
+	faqOrderByMap = map[string]bool{
 		"marks_value": true,
 		"time":        true,
 		"":            true,
@@ -30,7 +28,9 @@ var (
 )
 
 type FAQ struct {
-	IsMarked          bool       `bun:",notnull" json:"is_marked"`
+	Username          string     `bun:",notnull" json:"username"`
+	ImageURL          string     `bun:"image_url" json:"image_url"`
+	Marked            int32      `bun:",notnull" json:"marked"`
 	IsAnswered        bool       `bun:",notnull" json:"is_answered"`
 	MarksValue        int        `bun:",notnull" json:"marks_value"`
 	AnswerID          uint32     `bun:",notnull" json:"answer_id"`
@@ -104,6 +104,10 @@ type AddFAQMarkReq struct {
 	State      int32  `json:"state"`
 }
 
+type GetFAQReq struct {
+	QuestionID uint32 `json:"question_id"`
+}
+
 type FAQMark struct {
 	bun.BaseModel `bun:"table:faq_marks"`
 
@@ -115,69 +119,47 @@ type FAQMark struct {
 }
 
 type FAQListQuery struct {
-	// Sorting order by parameter : time | marks_value
-	Sort string `form:"sort"`
-
-	// Search by
-	Search string `form:"search"`
+	// add validation for
+	Opts repo.Options `query:"opts"`
 
 	// Sort by answered FAQs
-	IsAnswered *bool `form:"answered"`
+	IsAnswered *bool `query:"answered"`
 
 	// Sort by user's FAQs
-	IsMine *bool `form:"me"`
+	IsMine *bool `query:"me"`
 
-	// Positions limit per page. By default 20
-	Limit *uint32 `form:"limit"`
-
-	// Offset for pagination. By default 0
-	Offset *uint32 `form:"offset"`
-
-	// Orders direction. By default applies to 'time' sort parameter.
-	// If another sort parameter is used, then its "direction" is applied to that parameter
-	// asc - Ascending, from A to Z.
-	// desc - Descending, from Z to A.
-	Direction string `form:"direction"`
+	// Share question by id
+	ShareID *uint32 `query:"share_id"`
 }
 
-func (m *AddFAQMarkReq) Validate() error {
-	if m.State != -1 && m.State != 1 {
-		return apperrors.BadRequest("invalid mark state")
+func (q *FAQListQuery) Validate() error {
+	if !q.Opts.Order.IsValid() {
+		q.Opts.Order = repo.Order{OrderBy: "time", OrderType: "desc"}
+		return nil
+	}
+
+	if _, ok := faqOrderByMap[q.Opts.Order.OrderBy]; !ok {
+		return apperrors.BadRequest("invalid order by option")
 	}
 
 	return nil
 }
 
-func (q *FAQListQuery) Validate() error {
-	// Validating sort parameter
-	if !faqSortMap[q.Sort] {
-		return apperrors.BadRequest("invalid sort parameter")
+func (f *CreateFAQ) Validate() error {
+	if len(f.Question) == 0 || len(f.Question) > 300 {
+		return apperrors.BadRequest("invalid question length")
 	}
 
-	if q.Sort == "" {
-		q.Sort = "time"
+	if len(f.Images) > 5 {
+		return apperrors.BadRequest("no more than 5 images allowed")
 	}
 
-	// Validating direction parameter
-	if !faqDirectionMap[q.Direction] {
-		return apperrors.BadRequest("invalid direction parameter")
-	}
+	return nil
+}
 
-	if q.Direction == "" {
-		q.Direction = "desc"
-	}
-
-	// Validating pagination
-	if q.Limit != nil {
-		if *q.Limit > 100 {
-			*q.Limit = 20
-		}
-	} else {
-		q.Limit = &DefaultLimit
-	}
-
-	if q.Offset == nil {
-		q.Offset = &DefaultOffset
+func (m *AddFAQMarkReq) Validate() error {
+	if !faqMarkStateMap[m.State] {
+		return apperrors.BadRequest("invalid mark state")
 	}
 
 	return nil

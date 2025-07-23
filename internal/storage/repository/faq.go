@@ -94,6 +94,7 @@ func (r *FAQRepository) GetAllFAQ(
 		Column("question_id").
 		Column("user_id").
 		Column("anonymous_user_id").
+		Column("state").
 		Where("user_id = ? OR anonymous_user_id = ?", userID, anonymousUserID)
 
 	// Get answers
@@ -113,57 +114,54 @@ func (r *FAQRepository) GetAllFAQ(
 				WHEN fq.user_id = ? OR fq.anonymous_user_id = ? THEN TRUE
 				ELSE FALSE
 			END AS "is_me",
-			CASE
-				WHEN ul.user_id = ? OR ul.anonymous_user_id = ? THEN TRUE
-				ELSE FALSE
-			END AS "is_marked",
+			ul.state             AS "marked",
 			fq.answered          AS "is_answered",
 			fa.answer            AS "answer",
 			fa.id                AS "answer_id",
 			fa.created_at        AS "answer_created_at",
 			fq.images            AS "question_images",
-			fa.images            AS "answer_images"
-		`, userID, anonymousUserID, userID, anonymousUserID).
+			fa.images            AS "answer_images",
+			CASE
+				WHEN fq.user_id IS NOT NULL THEN u.username
+				ELSE 'Anonymous'
+			END AS "username",
+			CASE
+				WHEN fq.user_id IS NOT NULL THEN u.image_url
+				ELSE ''
+			END AS "image_url"
+		`, userID, anonymousUserID).
 		Join("LEFT JOIN (?) AS m  ON m.question_id  = fq.id", marksQuery).
 		Join("LEFT JOIN (?) AS ul ON ul.question_id = fq.id", userMarksQuery).
 		Join("LEFT JOIN (?) AS fa ON fa.question_id = fq.id", answersQuery).
+		Join("LEFT JOIN users AS u ON u.id = fq.user_id").
 		GroupExpr(`
 			fq.id, fq.question, fq.created_at,
 			fq.user_id, fq.anonymous_user_id,
-			ul.user_id, ul.anonymous_user_id,
+			ul.user_id, ul.anonymous_user_id, ul.state,
 			fq.answered,
 			fa.answer, fa.id, fa.created_at,
 			fq.images, fa.images,
-			m.marks_value
+			m.marks_value,
+			u.username,
+			u.image_url
 		`)
 
-	// Get user's questions
-	if faqParams.IsMine != nil && *faqParams.IsMine {
-		query.Where("fq.user_id = ? OR fq.anonymous_user_id = ?", userID, anonymousUserID)
-
-		if faqParams.IsAnswered != nil {
-			query.Where("fq.answered = ?", *faqParams.IsAnswered)
-		}
+	// Get user's questions or shared question
+	if faqParams.ShareID != nil {
+		query.Where("fq.id = ?", *faqParams.ShareID)
 	} else {
-		query.Where("fq.answered = TRUE")
-	}
+		// Get user's questions
+		if faqParams.IsMine != nil && *faqParams.IsMine {
+			query.Where("fq.user_id = ? OR fq.anonymous_user_id = ?", userID, anonymousUserID)
 
-	// Get questions by search
-	if len(faqParams.Search) > 0 {
-		query.Where("fq.question ILIKE ?", "%"+faqParams.Search+"%")
+			if faqParams.IsAnswered != nil {
+				query.Where("fq.answered = ?", *faqParams.IsAnswered)
+			}
+		} else {
+			query.Where("fq.answered = TRUE")
+		}
 	}
-
-	// Order
-	query.Order(fmt.Sprintf("%s %s", faqParams.Sort, faqParams.Direction))
-
-	// Pagination
-	if faqParams.Limit != nil {
-		query = query.Limit(int(*faqParams.Limit))
-	}
-
-	if faqParams.Offset != nil {
-		query = query.Offset(int(*faqParams.Offset))
-	}
+	query = faqParams.Opts.Apply(query)
 
 	err := query.
 		Scan(ctx, &faqs)
@@ -172,50 +170,6 @@ func (r *FAQRepository) GetAllFAQ(
 	}
 
 	return faqs, nil
-}
-
-func (r *FAQRepository) GetFAQsTotals(
-	ctx context.Context,
-	user *model.FAQUser,
-	faqParams *model.FAQListQuery,
-) (uint64, error) {
-	var countTotal uint64
-
-	var userID, anonymousUserID uuid.UUID
-	if user.Anonymous {
-		anonymousUserID = user.ID
-	} else {
-		userID = user.ID
-	}
-
-	query := r.DB.NewSelect().
-		Model((*model.FAQQuestion)(nil)).
-		ColumnExpr(`COUNT(fq.id) AS "count_total"`)
-
-	if faqParams.IsAnswered != nil {
-		query.Where("fq.answered = ?", *faqParams.IsAnswered)
-	}
-
-	if faqParams.IsMine != nil && *faqParams.IsMine {
-		query.Where("fq.user_id = ? OR fq.anonymous_user_id = ?", userID, anonymousUserID)
-
-		if faqParams.IsAnswered != nil {
-			query.Where("fq.answered = ?", *faqParams.IsAnswered)
-		}
-	} else {
-		query.Where("fq.answered = TRUE")
-	}
-
-	if len(faqParams.Search) > 0 {
-		query.Where("fq.question ILIKE ?", "%"+faqParams.Search+"%")
-	}
-
-	err := query.Scan(ctx, &countTotal)
-	if err != nil {
-		return 0, err
-	}
-
-	return countTotal, nil
 }
 
 func (r *FAQRepository) GetFAQQuestionByID(

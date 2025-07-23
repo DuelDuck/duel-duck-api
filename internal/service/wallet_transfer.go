@@ -13,6 +13,7 @@ import (
 	lookup "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
+	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/goccy/go-json"
@@ -34,11 +35,8 @@ var (
 )
 
 const (
-	USDCMintDecimals                uint8  = 6
-	USDCMintDecimalsMultiplier      uint64 = 1_000_000 // 10^6
-	USDCMintDecimalsMultiplierFloat        = float64(USDCMintDecimalsMultiplier)
-
-	SolMintDecimals uint8 = 9
+	USDCMintDecimals uint8 = 6
+	SolMintDecimals  uint8 = 9
 )
 
 type proceedTransferData struct {
@@ -58,12 +56,12 @@ func newProceedTransferData(
 	amount uint64,
 	decimals uint8,
 ) (*proceedTransferData, error) {
-	senderTokenAddress, _, err := solana.FindAssociatedTokenAddress(sender.PublicKey(), USDCMintAddress)
+	senderTokenAddress, _, err := solana.FindAssociatedTokenAddress(sender.PublicKey(), mint)
 	if err != nil {
 		return nil, apperrors.BadRequest("failed to get sender's associated token account", err)
 	}
 
-	recipientTokenAddress, _, err := solana.FindAssociatedTokenAddress(recipient, USDCMintAddress)
+	recipientTokenAddress, _, err := solana.FindAssociatedTokenAddress(recipient, mint)
 	if err != nil {
 		return nil, apperrors.BadRequest("failed to get recipient's associated token account", err)
 	}
@@ -85,7 +83,8 @@ func (s *WalletService) Transfer(
 	ctx context.Context,
 	senderID uuid.UUID,
 	recipientPublicKeyBase58 string,
-	amount uint64,
+	amount float64,
+	mint string,
 ) (string, error) {
 	recipient, err := solana.PublicKeyFromBase58(recipientPublicKeyBase58)
 	if err != nil || recipient == ZeroValuePublicKey {
@@ -106,34 +105,78 @@ func (s *WalletService) Transfer(
 		return "", apperrors.Internal("private key assigned to sender is not valid solana address", err)
 	}
 
-	data, err := newProceedTransferData(
-		sender,
-		recipient,
-		USDCMintAddress,
-		amount,
-		USDCMintDecimals)
-	if err != nil || data == nil {
-		return "", apperrors.BadRequest("failed to prepare transaction data", err)
+	mintAddress, err := solana.PublicKeyFromBase58(mint)
+	if err != nil {
+		return "", apperrors.BadRequest("mint address is not valid solana address")
 	}
 
-	hasEnoughBalance, err := s.HasEnoughTokenBalance(ctx, data.SenderTokenAddress, amount)
+	mintInfo, err := s.GetMintInfo(ctx, mintAddress)
 	if err != nil {
 		return "", err
 	}
 
-	if !hasEnoughBalance {
-		return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+	rawAmount := uint64(amount * math.Pow10(int(mintInfo.Decimals)))
+
+	if mintAddress == solana.SolMint {
+		// custom context instead of fiber context, so client isn't able to interrupt transaction
+		ctx = context.Background()
+
+		ok, err := s.HasEnoughSolBalance(ctx, sender.PublicKey(), rawAmount)
+		if err != nil {
+			return "", err
+		}
+
+		if !ok {
+			return "", apperrors.BadRequest("not enough sol for transfer")
+		}
+
+		txHash, err := s.transferSol(ctx, sender, recipient, rawAmount)
+		if err != nil {
+			return "", err
+		}
+
+		return txHash, nil
+	} else {
+		data, err := newProceedTransferData(
+			sender,
+			recipient,
+			mintAddress,
+			rawAmount,
+			mintInfo.Decimals)
+		if err != nil || data == nil {
+			return "", apperrors.BadRequest("failed to prepare transaction data", err)
+		}
+
+		hasEnoughBalance, err := s.HasEnoughTokenBalance(ctx, data.SenderTokenAddress, rawAmount)
+		if err != nil {
+			return "", err
+		}
+
+		if !hasEnoughBalance {
+			return "", apperrors.BadRequest("not enough balance to proceed a transaction")
+		}
+
+		// custom context instead of fiber context, so client isn't able to interrupt transaction
+		ctx = context.Background()
+
+		txHash, err := s.proceedTransfer(ctx, data)
+		if err != nil {
+			return "", err
+		}
+
+		return txHash, nil
+
 	}
+}
 
-	// custom context instead of fiber context, so client isn't able to interrupt transaction
-	ctx = context.Background()
-
-	txHash, err := s.proceedTransfer(ctx, data)
+func (s *WalletService) GetMintInfo(ctx context.Context, tokenKey solana.PublicKey) (*token.Mint, error) {
+	var mint token.Mint
+	err := s.SolanaRPC.GetAccountDataBorshInto(ctx, tokenKey, &mint)
 	if err != nil {
-		return "", err
+		return nil, apperrors.ServiceUnavailable("failed to get mint details", err)
 	}
 
-	return txHash, nil
+	return &mint, nil
 }
 
 func (s *WalletService) senderExists(ctx context.Context, senderID uuid.UUID) error {
@@ -150,18 +193,27 @@ func (s *WalletService) senderExists(ctx context.Context, senderID uuid.UUID) er
 }
 
 const (
-	Finalized  = rpc.CommitmentFinalized
-	Commitment = rpc.CommitmentConfirmed
-	Processed  = rpc.CommitmentProcessed
+	Finalized = rpc.CommitmentFinalized
+	Confirmed = rpc.CommitmentConfirmed
+	Processed = rpc.CommitmentProcessed
 )
 
-func (s *WalletService) GetTokenBalance(
+func (s *WalletService) getTokenBalance(
 	ctx context.Context,
 	ata solana.PublicKey,
+	commitment rpc.CommitmentType,
 ) (uint64, error) {
-	balance, err := s.SolanaRPC.GetTokenAccountBalance(ctx, ata, Commitment)
-	if err != nil || balance == nil || balance.Value == nil {
+	balance, err := s.SolanaRPC.GetTokenAccountBalance(ctx, ata, commitment)
+	if err != nil {
+		if s.isAccountUninitialized(err) {
+			return 0, model.ErrAccountUnitialized
+		}
+
 		return 0, apperrors.ServiceUnavailable("failed to get ata balance", err)
+	}
+
+	if balance == nil || balance.Value == nil {
+		return 0, apperrors.ServiceUnavailable("failed to get ata balance: balance is nil", nil)
 	}
 
 	balanceAmount, err := strconv.ParseUint(balance.Value.Amount, 10, 64)
@@ -172,26 +224,44 @@ func (s *WalletService) GetTokenBalance(
 	return balanceAmount, nil
 }
 
+func (s *WalletService) GetTokenBalance(
+	ctx context.Context,
+	ata solana.PublicKey,
+) (uint64, error) {
+	return s.getTokenBalance(ctx, ata, Confirmed)
+}
+
 func (s *WalletService) HasEnoughTokenBalance(
 	ctx context.Context,
 	ata solana.PublicKey,
 	requiredAmount uint64,
 ) (bool, error) {
-	tokenBalance, err := s.GetTokenBalance(ctx, ata)
+	tokenBalance, err := s.getTokenBalance(ctx, ata, Confirmed)
 	if err != nil {
 		return false, err
 	}
 
-	fmt.Println("current token balance:", tokenBalance)
-
 	return tokenBalance >= requiredAmount, nil
+}
+
+func (s *WalletService) HasEnoughTokenBalanceFinalized(
+	ctx context.Context,
+	ata solana.PublicKey,
+	requiredAmount uint64,
+) (bool, error) {
+	balanceAmount, err := s.getTokenBalance(ctx, ata, Finalized)
+	if err != nil {
+		return false, err
+	}
+
+	return balanceAmount >= requiredAmount, nil
 }
 
 func (s *WalletService) GetSolBalance(
 	ctx context.Context,
 	pk solana.PublicKey,
 ) (uint64, error) {
-	balance, err := s.SolanaRPC.GetBalance(ctx, pk, Commitment)
+	balance, err := s.SolanaRPC.GetBalance(ctx, pk, Confirmed)
 	if err != nil || balance == nil {
 		return 0, apperrors.ServiceUnavailable("failed to get ata balance", err)
 	}
@@ -230,6 +300,8 @@ const (
 	FallBackCUTransferChecked              = 6254
 	FallBackCUTransferWithTokenAccountInit = 30195
 
+	FallbackComputeUnitPrice = 343400
+
 	// CUExtraCapacityCoefficient sometimes transaction
 	// may consume a bit more Compute Units then usual
 	CUExtraCapacityCoefficient = 1.05
@@ -247,7 +319,7 @@ func (s *WalletService) proceedTransfer(ctx context.Context, data *proceedTransf
 		initTokenAccountInstruction, err := associatedtokenaccount.NewCreateInstruction(
 			data.SenderAccount.PublicKey(),
 			data.RecipientAddress,
-			USDCMintAddress).ValidateAndBuild()
+			data.Mint).ValidateAndBuild()
 		if err != nil {
 			return "", apperrors.Internal("failed to build token account initialization instruction", err)
 		}
@@ -257,9 +329,9 @@ func (s *WalletService) proceedTransfer(ctx context.Context, data *proceedTransf
 
 	transferInstruction, err := token.NewTransferCheckedInstruction(
 		data.Amount,
-		USDCMintDecimals,
+		data.Decimals,
 		data.SenderTokenAddress,
-		USDCMintAddress,
+		data.Mint,
 		data.RecipientTokenAddress,
 		data.SenderAccount.PublicKey(),
 		[]solana.PublicKey{data.SenderAccount.PublicKey()}).ValidateAndBuild()
@@ -316,6 +388,85 @@ func (s *WalletService) proceedTransfer(ctx context.Context, data *proceedTransf
 		ctx,
 		tx,
 		txSignerPrivateKeyGetter(data.SenderAccount))
+	if err != nil {
+		return "", err
+	}
+
+	return sig.String(), nil
+}
+
+func (s *WalletService) transferSol(
+	ctx context.Context,
+	sender solana.PrivateKey,
+	recipient solana.PublicKey,
+	rawAmount uint64,
+) (string, error) {
+	instructions := make([]solana.Instruction, 0, TransferTransactionInstructionsCount)
+
+	transferInstruction := system.NewTransferInstruction(
+		rawAmount,
+		sender.PublicKey(),
+		recipient,
+	).Build()
+
+	instructions = append(instructions, transferInstruction)
+
+	smTxInstructions := []solana.Instruction{
+		computebudget.NewSetComputeUnitLimitInstructionBuilder().
+			SetUnits(1_400_000).
+			Build(),
+		computebudget.NewSetComputeUnitPriceInstruction(FallbackComputeUnitPrice).
+			Build(),
+	}
+
+	smTxInstructions = append(smTxInstructions, instructions...)
+
+	tx, err := s.NewTransactionForSimulation(
+		smTxInstructions,
+		txSignerPrivateKeyGetter(sender),
+		solana.TransactionPayer(sender.PublicKey()),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
+	if err != nil {
+		computeUnits = FallBackCUTransferChecked
+	}
+
+	computeUnits = uint32(float64(computeUnits) * CUExtraCapacityCoefficient)
+	cuPriceInstruction, err := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(s.PriorityTracker.GetMediumPriorityMicroLamports()).
+		ValidateAndBuild()
+	if err != nil {
+		return "", apperrors.Internal("failed to set transaction compute unit price", err)
+	}
+
+	cuLimitInstruction, err := computebudget.NewSetComputeUnitLimitInstructionBuilder().
+		SetUnits(computeUnits).
+		ValidateAndBuild()
+	if err != nil {
+		return "", apperrors.Internal("failed to set transaction compute unit limit", err)
+	}
+
+	// Compute Unit Price and Compute Unit Limit instructions must be first
+	instructions = append([]solana.Instruction{cuPriceInstruction, cuLimitInstruction}, instructions...)
+
+	tx, err = solana.NewTransaction(
+		instructions,
+		solana.Hash{},
+		solana.TransactionPayer(sender.PublicKey()))
+	if err != nil {
+		return "", apperrors.Internal("failed to create transaction", err)
+	}
+
+	// Send transaction
+	sig, err := s.sendTxWithTracker(
+		ctx,
+		tx,
+		txSignerPrivateKeyGetter(sender),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -402,11 +553,11 @@ func (s *WalletService) simulateTransaction(
 ) (*rpc.SimulateTransactionResult, error) {
 	sTx, err := s.SolanaRPC.SimulateTransactionWithOpts(ctx, tx, opts)
 	if err != nil {
-		return nil, apperrors.ServiceUnavailable("failed to send transaction on simulation", err)
+		return nil, apperrors.ServiceUnavailable("failed to send simulation transaction", err)
 	}
 
 	if sTx == nil {
-		return nil, apperrors.ServiceUnavailable("failed to get transaction compute units, tx is nil", err)
+		return nil, apperrors.ServiceUnavailable("failed to get simulation transaction compute units, tx is nil", err)
 	}
 
 	return sTx.Value, nil
@@ -493,12 +644,12 @@ func (s *WalletService) NewTransactionForSimulation(
 		solana.Hash{}, // latest block hash will be set just before transaction sending or transaction simulation
 		opts...)
 	if err != nil {
-		return nil, apperrors.Internal("failed to create transaction", err)
+		return nil, apperrors.Internal("failed to create transaction for simulation", err)
 	}
 
 	_, err = tx.Sign(privateKeyGetter)
 	if err != nil {
-		return nil, apperrors.Internal("failed to sign a transaction", err)
+		return nil, apperrors.Internal("failed to sign a transaction for simulation", err)
 	}
 
 	return tx, nil
@@ -660,11 +811,14 @@ func (s *WalletService) swap(
 	if err != nil {
 		return "", err
 	}
+	addressTables := out.SwapTransaction.Message.GetAddressTables()
 
 	tx, err := s.NewTransactionForSimulation(
 		instructions,
 		txSignerPrivateKeyGetter(signer),
-		solana.TransactionPayer(signer.PublicKey()))
+		solana.TransactionPayer(signer.PublicKey()),
+		solana.TransactionAddressTables(addressTables),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -675,23 +829,28 @@ func (s *WalletService) swap(
 		return "", err
 	}
 
-	computeUnits += uint32(float64(computeUnits) * 0.05)
+	computeUnits += uint32(float64(computeUnits) * 0.2)
 
-	highPriorityMicroLamports := s.PriorityTracker.GetMediumPriorityMicroLamports()
+	priorityMicLamps := s.PriorityTracker.GetMediumPriorityMicroLamports()
 
-	instructions = append(instructions,
-		computebudget.NewSetComputeUnitPriceInstructionBuilder().
-			SetMicroLamports(highPriorityMicroLamports).
-			Build(),
-		computebudget.NewSetComputeUnitLimitInstructionBuilder().
-			SetUnits(computeUnits).
-			Build(),
+	instructions = append(
+		[]solana.Instruction{
+			computebudget.NewSetComputeUnitPriceInstructionBuilder().
+				SetMicroLamports(priorityMicLamps).
+				Build(),
+			computebudget.NewSetComputeUnitLimitInstructionBuilder().
+				SetUnits(computeUnits).
+				Build(),
+		},
+		instructions...,
 	)
 
 	tx, err = solana.NewTransaction(
 		instructions,
 		out.SwapTransaction.Message.RecentBlockhash,
-		solana.TransactionPayer(signer.PublicKey()))
+		solana.TransactionPayer(signer.PublicKey()),
+		solana.TransactionAddressTables(addressTables),
+	)
 	if err != nil {
 		return "", apperrors.Internal("failed to build transaction", err)
 	}

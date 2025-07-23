@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
@@ -29,8 +30,10 @@ type DuelService struct {
 	ModeratorStatsRepository *repository.ModeratorStatsRepository
 	PlayerRepository         *repository.PlayerRepository
 	ReferralRepository       *repository.ReferralRepository
+	DuelShareClient          *resty.Client
 	TransactionManager       *repo.TransactionManager
 	ContractAddress          string
+	DuelShareImageAPI        string
 }
 
 func NewDuelService(
@@ -62,8 +65,10 @@ func NewDuelService(
 		ModeratorStatsRepository: moderatorStatsRepository,
 		PlayerRepository:         playerRepository,
 		ReferralRepository:       referralRepository,
+		DuelShareClient:          resty.New(),
 		TransactionManager:       transactionManager,
 		ContractAddress:          c.App.ContractAddress,
+		DuelShareImageAPI:        c.App.DuelShareImageAPI,
 	}, nil
 }
 
@@ -152,6 +157,10 @@ func (s *DuelService) CreateNewDuelAdmin(ctx context.Context, adminID uuid.UUID,
 		})
 	if err != nil {
 		return apperrors.Internal("failed to create duel", err)
+	}
+
+	if err := s.sendDuelShareImageReq(duel); err != nil {
+		zap.L().Error("failed on duel share image request", zap.Error(err))
 	}
 
 	return nil
