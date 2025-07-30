@@ -272,22 +272,22 @@ func (r *TaskRepository) FindCompletedByUserID(
 }
 
 func (r *TaskRepository) GetUnclaimedRewards(
-	ctx context.Context,
-	id uint64,
+    ctx context.Context,
+    id uint64,
 ) ([]model.CompletedTask, error) {
 
-	unclaimedRewards := make([]model.CompletedTask, 0)
+    unclaimedRewards := make([]model.CompletedTask, 0)
 
-	err := r.DB.NewSelect().
-		Model(&unclaimedRewards).
-		Where("task_id = ?", id).
-		Where("reward_claimed < completion_count").
-		Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
+    err := r.DB.NewSelect().
+        Model(&unclaimedRewards).
+        Where("task_id = ?", id).
+        Where("reward_claimed < completion_count").
+        Scan(ctx)
+    if err != nil {
+         return nil, err
+    }
 
-	return unclaimedRewards, nil
+    return unclaimedRewards, nil
 }
 
 func (r *TaskRepository) UpdateCompletedTaskLimits(

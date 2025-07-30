@@ -193,7 +193,7 @@ func (s *DuelService) completeCreateDuelTask(ctx context.Context, duelID uuid.UU
 		if err != nil {
 			return apperrors.Internal("failed to get owner id by duel id", err)
 		}
-
+		
 		if userID == uuid.Nil {
 			return apperrors.NotFound("duel id not found")
 		}

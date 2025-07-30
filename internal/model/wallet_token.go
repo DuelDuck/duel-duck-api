@@ -62,6 +62,14 @@ type TokenWithValue struct {
 	USDValue            uint64
 }
 
+type SolAutoswapResult struct {
+	TxHash        string  `json:"tx_hash"`
+	TokenMint     string  `json:"token_mint"`
+	TokenAmount   uint64  `json:"token_amount"`
+	SolAmount     uint64  `json:"sol_amount"`
+	TokenValueUSD float64 `json:"token_value_usd"`
+}
+
 type AutoswapResult struct {
 	Mint       string  `json:"mint"`
 	ATA        string  `json:"ATA"`
@@ -70,6 +78,13 @@ type AutoswapResult struct {
 	SwapAmount uint64  `json:"swapped_amount"`
 	USCPrice   float64 `json:"usd_price"`
 	TxHash     string  `json:"tx_hash"`
+}
+
+type ComprehensiveAutoswapResult struct {
+	SolAutoswapResult   *SolAutoswapResult `json:"sol_autoswap_result,omitempty"`
+	USDCAutoswapResults []AutoswapResult   `json:"usdc_autoswap_results"`
+	SolAutoswapNeeded   bool               `json:"sol_autoswap_needed"`
+	USDCAutoswapNeeded  bool               `json:"usdc_autoswap_needed"`
 }
 
 func AutoswapResultFromTokenWithValue(token TokenWithValue, amountToSwap uint64) AutoswapResult {

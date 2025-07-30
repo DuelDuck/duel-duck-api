@@ -35,8 +35,10 @@ var (
 )
 
 const (
-	USDCMintDecimals uint8 = 6
-	SolMintDecimals  uint8 = 9
+	USDCMintDecimals             uint8   = 6
+	USDCRawAmountMultiplierFloat float64 = 1_000_000
+
+	SolMintDecimals uint8 = 9
 )
 
 type proceedTransferData struct {
@@ -257,16 +259,48 @@ func (s *WalletService) HasEnoughTokenBalanceFinalized(
 	return balanceAmount >= requiredAmount, nil
 }
 
-func (s *WalletService) GetSolBalance(
+func (s *WalletService) getSolBalance(
 	ctx context.Context,
 	pk solana.PublicKey,
+	commitment rpc.CommitmentType,
 ) (uint64, error) {
-	balance, err := s.SolanaRPC.GetBalance(ctx, pk, Confirmed)
+	balance, err := s.SolanaRPC.GetBalance(ctx, pk, commitment)
 	if err != nil || balance == nil {
 		return 0, apperrors.ServiceUnavailable("failed to get ata balance", err)
 	}
 
 	return balance.Value, nil
+}
+
+func (s *WalletService) GetSolBalance(
+	ctx context.Context,
+	pk solana.PublicKey,
+) (uint64, error) {
+	return s.getSolBalance(ctx, pk, Confirmed)
+}
+
+func (s *WalletService) GetSolBalanceFinalized(
+	ctx context.Context,
+	pk solana.PublicKey,
+) (uint64, error) {
+	return s.getSolBalance(ctx, pk, Finalized)
+}
+
+func (s *WalletService) HasEnoughSolBalanceFinalized(
+	ctx context.Context,
+	pk solana.PublicKey,
+	requiredAmount uint64,
+) (bool, error) {
+	balance, err := s.GetSolBalanceFinalized(ctx, pk)
+	if err != nil {
+		return false, err
+	}
+
+	if balance < requiredAmount {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (s *WalletService) HasEnoughSolBalance(

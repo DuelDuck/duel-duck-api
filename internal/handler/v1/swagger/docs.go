@@ -871,7 +871,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Crypto duel approved successfully and made public",
                         "schema": {
-                            "$ref": "#/definitions/model.JoinCryptoDuelResp"
+                            "type": "object"
                         }
                     },
                     "400": {
@@ -5535,117 +5535,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/wallet/notifications": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieves all swap notifications associated with the authenticated user's wallet.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "wallet"
-                ],
-                "summary": "Get all swap notifications for the authenticated user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of transaction notifications",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.TxNotification"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Authentication required or invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/apperrors.ErrorPublic"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apperrors.ErrorPublic"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Deletes one or more transaction notifications for the authenticated user by their notification IDs.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "wallet"
-                ],
-                "summary": "Delete transaction notifications",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "List of notification IDs to delete",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.TxNotificationDeleteReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Notifications deleted successfully"
-                    },
-                    "400": {
-                        "description": "Invalid request data or missing notification IDs",
-                        "schema": {
-                            "$ref": "#/definitions/apperrors.ErrorPublic"
-                        }
-                    },
-                    "401": {
-                        "description": "Authentication required or invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/apperrors.ErrorPublic"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apperrors.ErrorPublic"
-                        }
-                    }
-                }
-            }
-        },
         "/wallet/swap": {
             "post": {
                 "security": [
@@ -6158,6 +6047,117 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Recipient not found",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/tx-notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all swap notifications associated with the authenticated user's wallet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Get all swap notifications for the authenticated user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of transaction notifications",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.TxNotification"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes one or more transaction notifications for the authenticated user by their notification IDs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Delete transaction notifications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "List of notification IDs to delete",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TxNotificationDeleteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifications deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request data or missing notification IDs",
+                        "schema": {
+                            "$ref": "#/definitions/apperrors.ErrorPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required or invalid credentials",
                         "schema": {
                             "$ref": "#/definitions/apperrors.ErrorPublic"
                         }
@@ -6849,9 +6849,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "image_url": {
-                    "type": "string"
-                },
                 "is_answered": {
                     "type": "boolean"
                 },
@@ -6901,7 +6898,7 @@ const docTemplate = `{
         "model.JoinCryptoDuelResp": {
             "type": "object",
             "properties": {
-                "player": {
+                "duel": {
                     "$ref": "#/definitions/model.Player"
                 },
                 "result": {

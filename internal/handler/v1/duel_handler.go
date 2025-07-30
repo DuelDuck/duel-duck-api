@@ -189,7 +189,7 @@ func (h *DuelHandler) JoinDuel(c fiber.Ctx) error {
 //	@Failure		401				{object}	apperrors.ErrorPublic		"Unauthorized - Invalid or missing claims"
 //	@Failure		404				{object}	apperrors.ErrorPublic		"Crypto duel not found"
 //	@Failure		500				{object}	apperrors.ErrorPublic		"Internal server error"
-//	@Router			/crypto-duel/join [post]
+//	@Router			/duel/join-crypto [post]
 func (h *DuelHandler) JoinCryptoDuel(c fiber.Ctx) error {
 	var req model.JoinDuelReq
 	if err := c.Bind().JSON(&req); err != nil {

@@ -16,7 +16,6 @@ import (
 	"github.com/goccy/go-json"
 	"gitlab.com/duel-duck/duel-duck-api/internal/model"
 	"gitlab.com/duel-duck/duel-duck-api/pkg/apperrors"
-	"time"
 )
 
 func (s *WalletService) InitSolanaRoom(ctx context.Context, duel *model.Duel) (string, error) {
@@ -84,27 +83,35 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 	if err != nil {
 		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
+	userPublicKey := userPrivateKey.PublicKey()
 
-	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
+	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPublicKey, USDCMintAddress)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
+	usdcBalance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
 
-	var swapRes []model.AutoswapResult
-	var autoswapNeeded bool
-	if balance < duelPrice {
-		autoswapNeeded = true
-		requiredAmount := duelPrice - balance
+	solBalance, err := s.GetSolBalance(ctx, userPublicKey)
+	if err != nil {
+		return nil, apperrors.Internal("failed to get user SOL balance", err)
+	}
 
-		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
-		if err != nil {
-			return nil, err
-		}
+	autoswapParams := &AutoswapParams{
+		UserID:       user.ID,
+		PrivateKey:   userPrivateKey,
+		USDCBalance:  usdcBalance,
+		RequiredUSDC: duelPrice,
+		SolBalance:   solBalance,
+	}
+
+	var autoswapResult *model.ComprehensiveAutoswapResult
+	autoswapResult, err = s.Autoswap(ctx, autoswapParams)
+	if err != nil {
+		return nil, err
 	}
 
 	reqBody = map[string]interface{}{
@@ -131,17 +138,6 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 		solana.TransactionPayer(userPrivateKey.PublicKey()))
 	if err != nil {
 		return nil, err
-	}
-
-	if autoswapNeeded {
-		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, apperrors.BadRequest("not enough token balance (timeout)")
-		}
 	}
 
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
@@ -184,7 +180,7 @@ func (s *WalletService) InitAndJoinSolanaRoom(
 
 	return &model.JoinSolanaRoomResp{
 		TxHash:         txHash.String(),
-		AutoswapResult: swapRes,
+		AutoswapResult: autoswapResult,
 	}, nil
 }
 
@@ -208,29 +204,37 @@ func (s *WalletService) JoinSolanaRoom(
 	if err != nil {
 		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
+	userPublicKey := userPrivateKey.PublicKey()
 
-	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
+	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPublicKey, USDCMintAddress)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
+	usdcBalance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
 
+	solBalance, err := s.GetSolBalance(ctx, userPublicKey)
+	if err != nil {
+		return nil, apperrors.Internal("failed to get user SOL balance", err)
+	}
+
 	duelPrice := duel.DuelPrice * model.USDCPriceMultiplier
 
-	var swapRes []model.AutoswapResult
-	var autoswapNeeded bool
-	if balance < duelPrice {
-		autoswapNeeded = true
-		requiredAmount := duelPrice - balance
+	autoswapParams := &AutoswapParams{
+		UserID:       user.ID,
+		PrivateKey:   userPrivateKey,
+		USDCBalance:  usdcBalance,
+		RequiredUSDC: duelPrice,
+		SolBalance:   solBalance,
+	}
 
-		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
-		if err != nil {
-			return nil, err
-		}
+	var autoswapResult *model.ComprehensiveAutoswapResult
+	autoswapResult, err = s.Autoswap(ctx, autoswapParams)
+	if err != nil {
+		return nil, err
 	}
 
 	reqBody := map[string]any{"pda_nr": duel.RoomNumber}
@@ -264,17 +268,6 @@ func (s *WalletService) JoinSolanaRoom(
 		return nil, apperrors.Internal("failed to create transaction", err)
 	}
 
-	if autoswapNeeded {
-		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, apperrors.BadRequest("not enough token balance (timeout)")
-		}
-	}
-
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
 	if err != nil {
 		return nil, err
@@ -315,7 +308,7 @@ func (s *WalletService) JoinSolanaRoom(
 
 	return &model.JoinSolanaRoomResp{
 		TxHash:         txHash.String(),
-		AutoswapResult: swapRes,
+		AutoswapResult: autoswapResult,
 	}, nil
 }
 
@@ -334,30 +327,37 @@ func (s *WalletService) joinSolanaRoom(
 	if err != nil {
 		return nil, apperrors.Internal("failed to parse user's private key", err)
 	}
+	userPublicKey := userPrivateKey.PublicKey()
 
-	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPrivateKey.PublicKey(), USDCMintAddress)
+	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(userPublicKey, USDCMintAddress)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token address", err)
 	}
 
-	balance, err := s.GetTokenBalance(ctx, userTokenAccount)
+	usdcBalance, err := s.GetTokenBalance(ctx, userTokenAccount)
 	if err != nil {
 		return nil, apperrors.Internal("failed to get user associated token balance", err)
 	}
 
+	solBalance, err := s.GetSolBalance(ctx, userPublicKey)
+	if err != nil {
+		return nil, apperrors.Internal("failed to get user SOL balance", err)
+	}
+
 	duelPrice := duel.DuelPrice * model.USDCPriceMultiplier
 
-	var swapRes []model.AutoswapResult
-	var autoswapNeeded bool
-	if balance < duelPrice {
-		autoswapNeeded = true
-		requiredAmount := duelPrice - balance
+	autoswapParams := &AutoswapParams{
+		UserID:       user.ID,
+		PrivateKey:   userPrivateKey,
+		USDCBalance:  usdcBalance,
+		RequiredUSDC: duelPrice,
+		SolBalance:   solBalance,
+	}
 
-		swapRes, err = s.AutoswapUSDC(ctx, user.ID, userPrivateKey, requiredAmount)
-
-		if err != nil {
-			return nil, err
-		}
+	var autoswapResult *model.ComprehensiveAutoswapResult
+	autoswapResult, err = s.Autoswap(ctx, autoswapParams)
+	if err != nil {
+		return nil, err
 	}
 
 	multiplier := (duel.PlayersCount)/10 + 1
@@ -388,17 +388,6 @@ func (s *WalletService) joinSolanaRoom(
 		return nil, apperrors.Internal("failed to create transaction", err)
 	}
 
-	if autoswapNeeded {
-		ok, err := s.waitForEnoughTokenBalance(ctx, userTokenAccount, duelPrice, 60*time.Second, 3*time.Second)
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, apperrors.BadRequest("not enough token balance (timeout)")
-		}
-	}
-
 	computeUnits, err := s.GetSimulationComputeUnits(ctx, tx)
 	if err != nil {
 		return nil, err
@@ -439,7 +428,7 @@ func (s *WalletService) joinSolanaRoom(
 
 	return &model.JoinSolanaRoomResp{
 		TxHash:         txHash.String(),
-		AutoswapResult: swapRes,
+		AutoswapResult: autoswapResult,
 	}, nil
 }
 

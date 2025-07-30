@@ -404,8 +404,8 @@ func (p DuelParams) CalculateCryptoCommissionReward() uint64 {
 }
 
 type JoinSolanaRoomResp struct {
-	TxHash         string           `json:"tx_hash"`
-	AutoswapResult []AutoswapResult `json:"autoswap_result"`
+	TxHash         string                       `json:"tx_hash"`
+	AutoswapResult *ComprehensiveAutoswapResult `json:"autoswap_result"`
 }
 
 type CreateCryptoDuelResp struct {
@@ -414,7 +414,7 @@ type CreateCryptoDuelResp struct {
 }
 
 type JoinCryptoDuelResp struct {
-	Player *Player             `json:"player"`
+	Player *Player             `json:"duel"`
 	Result *JoinSolanaRoomResp `json:"result"`
 }
 
